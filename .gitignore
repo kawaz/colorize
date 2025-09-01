@@ -1,0 +1,23 @@
+# Debug and test files
+debug_*.js
+test_*.js
+test-*.txt
+test-*.sh
+test-*.ts
+test*.ts
+
+# Documentation samples
+docs/
+
+# Node modules (if added later)
+node_modules/
+
+# OS files
+.DS_Store
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.iml
