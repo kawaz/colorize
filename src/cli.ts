@@ -294,7 +294,6 @@ export async function run() {
       const readline = await import("node:readline");
       const rl = readline.createInterface({
         input: process.stdin,
-        output: process.stdout,
         terminal: false,
       });
 

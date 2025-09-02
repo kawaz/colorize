@@ -17,7 +17,7 @@
     "dev": "bun run bin/colorize-dev",
     "test": "bun test",
     "lint": "bunx biome check . --write",
-    "build": "bun build src/cli.ts --outfile=dist/colorize.js --target=node --minify",
+    "build": "bun build src/cli.ts --outfile=dist/colorize.js --target=bun --minify",
     "prepublishOnly": "bun run lint && bun run test && bun run build",
     "release": "bun run release:patch",
     "release:patch": "bun run prepublishOnly && npm version patch && git push && git push --tags",
