@@ -24,7 +24,6 @@ describe("Option Parsing", () => {
       expect(options.joinMultiline).toBe(false);
       expect(options.deduplicateTimestamps).toBe(false);
       expect(options.relativeTime).toBe(false);
-      expect(options.lineBuffered).toBe(true);
       expect(options.forceColor).toBe(false);
       expect(options.help).toBe(false);
       expect(options.theme).toBeUndefined();
@@ -67,15 +66,6 @@ describe("Option Parsing", () => {
       expect(options.relativeTime).toBe(true);
     });
 
-    test("--line-buffered enables line buffering", () => {
-      const options = parseArgs(["--no-line-buffered", "--line-buffered"]);
-      expect(options.lineBuffered).toBe(true);
-    });
-
-    test("--no-line-buffered disables line buffering", () => {
-      const options = parseArgs(["--no-line-buffered"]);
-      expect(options.lineBuffered).toBe(false);
-    });
 
     test("--force-color enables forced color", () => {
       const options = parseArgs(["--force-color"]);
@@ -172,11 +162,10 @@ describe("Option Parsing", () => {
 
   describe("Complex scenarios", () => {
     test("all options together", () => {
-      const options = parseArgs(["-j", "--dedup-timestamps", "-r", "--no-line-buffered", "-c", "-t", "tokyo-night"]);
+      const options = parseArgs(["-j", "--dedup-timestamps", "-r", "-c", "-t", "tokyo-night"]);
       expect(options.joinMultiline).toBe(true);
       expect(options.deduplicateTimestamps).toBe(true);
       expect(options.relativeTime).toBe(true);
-      expect(options.lineBuffered).toBe(false);
       expect(options.forceColor).toBe(true);
       expect(options.theme).toBe("tokyo-night");
     });
@@ -187,12 +176,11 @@ describe("Option Parsing", () => {
     });
 
     test("environment with all options, command-line overrides some", () => {
-      process.env.COLORIZE_OPTIONS = "-j --dedup-timestamps -r --no-line-buffered -c -t github";
-      const options = parseArgs(["--no-join-multiline", "--line-buffered", "--no-theme"]);
+      process.env.COLORIZE_OPTIONS = "-j --dedup-timestamps -r -c -t github";
+      const options = parseArgs(["--no-join-multiline", "--no-theme"]);
       expect(options.joinMultiline).toBe(false); // overridden
       expect(options.deduplicateTimestamps).toBe(true); // from env
       expect(options.relativeTime).toBe(true); // from env
-      expect(options.lineBuffered).toBe(true); // overridden
       expect(options.forceColor).toBe(true); // from env
       expect(options.theme).toBeUndefined(); // overridden
     });

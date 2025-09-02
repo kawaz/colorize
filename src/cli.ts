@@ -9,6 +9,23 @@ import { themeInfo } from "./theme";
 import { deduplicateTimestamps } from "./timestamp-dedup";
 import { createColorizeVisitor } from "./visitor";
 
+// Node.js環境でconsoleにAsyncIteratorを追加
+if (typeof console[Symbol.asyncIterator] === 'undefined') {
+  // @ts-ignore
+  console[Symbol.asyncIterator] = async function* () {
+    const readline = await import('node:readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: false
+    });
+    
+    for await (const line of rl) {
+      yield line;
+    }
+  };
+}
+
 // ビルド時に情報を埋め込む
 const BUILD_INFO = getBuildInfo();
 
@@ -22,7 +39,6 @@ export interface Options {
   joinMultiline: boolean;
   deduplicateTimestamps: boolean;
   relativeTime: boolean;
-  lineBuffered: boolean;
   forceColor: boolean;
   help: boolean;
   version: boolean;
@@ -34,7 +50,6 @@ export function parseArgs(args: string[]): Options {
     joinMultiline: false,
     deduplicateTimestamps: false, // デフォルトでOFF
     relativeTime: false,
-    lineBuffered: true, // デフォルトで有効
     forceColor: false,
     help: false,
     version: false,
@@ -77,12 +92,6 @@ function parseArgsInto(args: string[], options: Options): void {
         break;
       case "--no-relative-time":
         options.relativeTime = false;
-        break;
-      case "--line-buffered":
-        options.lineBuffered = true;
-        break;
-      case "--no-line-buffered":
-        options.lineBuffered = false;
         break;
       case "--force-color":
       case "-c":
@@ -153,10 +162,9 @@ ${chalk.bold("Usage:")}
   tail -f app.log | colorize -c | less -R
 
 ${chalk.bold("Options:")}
-  -j, --join-multiline       Join multiline log entries (disables line buffering)
+  -j, --join-multiline       Join multiline log entries
   --dedup-timestamps         Remove duplicate timestamps (e.g., kubectl --timestamps)
   -r, --relative-time        Show relative time next to timestamps (e.g., 2.5h)
-  --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piped or redirected
   -t, --theme <name>         Color theme (use -t without name to list themes)
   -h, --help                 Show this help message
@@ -224,30 +232,21 @@ async function main() {
   });
 
   try {
-    // ラインバッファリングモードの自動判定
-    // マルチライン処理が有効な場合はバッチモードを強制
-    const useLineBuffering = options.lineBuffered && !options.joinMultiline;
-
-    if (useLineBuffering) {
-      // Bunの標準入力を行単位で読み込む
-      for await (const line of console) {
-        let processedLine = line;
-
-        // タイムスタンプ重複削除
-        if (options.deduplicateTimestamps) {
-          processedLine = deduplicateTimestamps(processedLine, { enabled: true });
-        }
-
-        // 色付け処理
-        if (processedLine.trim() === "") {
-          console.log(processedLine);
-        } else {
-          console.log(processLine(processedLine, options, visitor));
-        }
-      }
-    } else {
+    // マルチライン処理が必要な場合のみバッチモードを使用
+    if (options.joinMultiline) {
       // 通常モード（一括読み込み）
-      const input = await Bun.stdin.text();
+      let input: string;
+      
+      if (typeof Bun !== 'undefined') {
+        input = await Bun.stdin.text();
+      } else {
+        // Node.js環境でstdinを全て読み込む
+        const chunks: Buffer[] = [];
+        for await (const chunk of process.stdin) {
+          chunks.push(chunk);
+        }
+        input = Buffer.concat(chunks).toString('utf-8');
+      }
 
       if (!input) {
         process.exit(0);
@@ -279,6 +278,23 @@ async function main() {
 
       // 出力
       console.log(colorizedLines.join("\n"));
+    } else {
+      // ストリーム処理（行単位で読み込み、リアルタイム出力）
+      for await (const line of console) {
+        let processedLine = line;
+
+        // タイムスタンプ重複削除
+        if (options.deduplicateTimestamps) {
+          processedLine = deduplicateTimestamps(processedLine, { enabled: true });
+        }
+
+        // 色付け処理
+        if (processedLine.trim() === "") {
+          console.log(processedLine);
+        } else {
+          console.log(processLine(processedLine, options, visitor));
+        }
+      }
     }
   } catch (error) {
     console.error(chalk.red("Error:"), error);
