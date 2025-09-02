@@ -15,15 +15,12 @@ function isCstNode(element: CstNode | IToken): element is CstNode {
 export class ColorizeVisitor extends BaseVisitor {
   private timestampCount = 0; // 現在の行内のタイムスタンプ数
   private showRelativeTime = false; // 相対時間を表示するかどうか
+  private theme: ReturnType<typeof getTheme>;
 
-  private get theme() {
-    // 毎回動的にテーマを取得（環境変数の変更を反映）
-    return getTheme(process.env.COLORIZE_THEME);
-  }
-
-  constructor(options: { showRelativeTime?: boolean } = {}) {
+  constructor(options: { showRelativeTime?: boolean; theme?: string } = {}) {
     super();
     this.showRelativeTime = options.showRelativeTime || false;
+    this.theme = getTheme(options.theme);
     this.validateVisitor();
   }
 

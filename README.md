@@ -107,11 +107,8 @@ kubectl logs -f --timestamps pod_name | colorize
 You can set default options using environment variables:
 
 ```bash
-# Set default options
+# Set default options (includes theme)
 export COLORIZE_OPTIONS="-r -t github"
-
-# Set default theme
-export COLORIZE_THEME="monokai"
 
 # Force color output
 export FORCE_COLOR=1

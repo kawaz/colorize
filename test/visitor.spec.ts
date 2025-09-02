@@ -5,13 +5,10 @@ import { createColorizeVisitor } from "../src/visitor";
 
 describe("Visitor", () => {
   function colorize(input: string, options = {}) {
-    // テストテーマを使用
-    process.env.COLORIZE_THEME = "test";
-
     const lexResult = LogLexer.tokenize(input);
     logParser.input = lexResult.tokens;
     const cst = logParser.logContent();
-    const visitor = createColorizeVisitor(options);
+    const visitor = createColorizeVisitor({ ...options, theme: "test" });
     return visitor.visit(cst);
   }
 

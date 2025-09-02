@@ -158,7 +158,6 @@ ${chalk.bold("Examples:")}
 ${chalk.bold("Environment Variables:")}
   COLORIZE_OPTIONS   Set default options (e.g., export COLORIZE_OPTIONS="-r -t github")
                      Command-line arguments override environment settings
-  COLORIZE_THEME     Set default theme (overridden by -t option)
 `);
 }
 
@@ -204,13 +203,11 @@ async function main() {
     chalk.level = 3; // chalkにも明示的に設定
   }
 
-  // テーマ設定（コマンドライン引数が環境変数より優先）
-  if (options.theme) {
-    process.env.COLORIZE_THEME = options.theme;
-  }
-
-  // Visitorインスタンスを作成（相対時間オプションを渡す）
-  const visitor = createColorizeVisitor({ showRelativeTime: options.relativeTime });
+  // Visitorインスタンスを作成（相対時間オプションとテーマを渡す）
+  const visitor = createColorizeVisitor({ 
+    showRelativeTime: options.relativeTime,
+    theme: options.theme 
+  });
 
   try {
     // ラインバッファリングモードの自動判定

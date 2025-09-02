@@ -85,4 +85,4 @@ export const themeInfo = {
 };
 
 // 現在のテーマ（環境変数から取得）
-export const currentTheme = getTheme(process.env.COLORIZE_THEME);
+export const currentTheme = getTheme();
