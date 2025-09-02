@@ -195,7 +195,14 @@ async function main() {
   }
 
   if (options.version) {
-    showVersion();
+    // --version --verbose または --version -v で詳細表示
+    const verboseIndex = process.argv.indexOf('--verbose');
+    const vIndex = process.argv.indexOf('-v');
+    if (verboseIndex !== -1 || vIndex !== -1) {
+      showVersionVerbose();
+    } else {
+      showVersion();
+    }
     process.exit(0);
   }
 
