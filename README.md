@@ -107,7 +107,11 @@ You can set default options using environment variables:
 
 ```bash
 # Set default options (includes theme)
-export COLORIZE_OPTIONS="-r -t github"
+export COLORIZE_OPTIONS="-r -t github --dedup-timestamps"
+
+# Command-line arguments override environment settings
+# Use --no- prefix to disable options from COLORIZE_OPTIONS
+cat log.txt | colorize --no-dedup-timestamps  # Disables dedup even if set in env
 
 # Force color output
 export FORCE_COLOR=1

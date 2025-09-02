@@ -130,6 +130,8 @@ ${chalk.bold("Options:")}
 ${chalk.bold("Environment Variables:")}
   COLORIZE_OPTIONS   Set default options (e.g., export COLORIZE_OPTIONS="-r -t github")
                      Command-line arguments override environment settings
+                     All boolean options support --no- prefix to disable
+                     (e.g., --no-dedup-timestamps, --no-line-buffered)
 `);
 }
 
