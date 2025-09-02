@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import chalk from "chalk";
 import { getBuildInfo } from "./build-info.macro" with { type: "macro" };
 import { LogLexer } from "./lexer";
@@ -132,8 +130,10 @@ async function performUpgrade() {
   console.log(chalk.bold("🔄 Checking for updates..."));
 
   try {
-    // 実行ファイルのパスを取得
+    // 実行環境の情報を取得
+    const runtime = process.argv[0]; // node or bun の実行パス
     const scriptPath = process.argv[1];
+    console.log(chalk.dim(`Current runtime: ${runtime}`));
     console.log(chalk.dim(`Current installation: ${scriptPath}`));
 
     // グローバルインストールかどうかを判定
@@ -143,16 +143,16 @@ async function performUpgrade() {
       scriptPath.includes("/.bun/") ||
       scriptPath.includes("/node_modules/.bin/");
 
-    // パッケージマネージャーを検出
+    // パッケージマネージャーを検出（実行中のランタイムを優先）
     let packageManager = "npm";
     let installCommand = "install";
 
-    // Bunでインストールされているか確認
-    if (scriptPath.includes("/.bun/")) {
+    // process.argv[0]から現在のランタイムを判定
+    if (runtime.includes("bun")) {
       packageManager = "bun";
       installCommand = "add";
-    } else if (existsSync(join(process.cwd(), "bun.lockb"))) {
-      // ローカルにbun.lockbがある場合
+    } else if (scriptPath.includes("/.bun/")) {
+      // インストールパスからもbunを検出
       packageManager = "bun";
       installCommand = "add";
     }
