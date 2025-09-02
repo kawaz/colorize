@@ -130,10 +130,10 @@ function showVersion() {
 
 function showVersionVerbose() {
   // 詳細なバージョン情報
-  const dirtyFlag = BUILD_INFO.gitDirty ? ' (uncommitted changes)' : '';
+  const dirtyFlag = BUILD_INFO.gitDirty ? '-dirty' : '';
   console.log(`${chalk.bold(BUILD_INFO.name)}`);
   console.log(`  Version:     ${BUILD_INFO.version}`);
-  console.log(`  Commit:      ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})${dirtyFlag}`);
+  console.log(`  Commit:      ${BUILD_INFO.gitCommit}${dirtyFlag} (${BUILD_INFO.gitBranch})`);
   console.log(`  Commit date: ${BUILD_INFO.gitCommitDate}`);
   console.log(`  Build date:  ${BUILD_INFO.buildDate}`);
   console.log(`  Built with:  Bun v${BUILD_INFO.bunVersion}`);
