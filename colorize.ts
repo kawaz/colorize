@@ -20,7 +20,6 @@ interface Options {
   relativeTime: boolean;
   lineBuffered: boolean;
   forceColor: boolean;
-  verbose: boolean;
   help: boolean;
   theme?: string;
 }
@@ -32,7 +31,6 @@ function parseArgs(args: string[]): Options {
     relativeTime: false,
     lineBuffered: true, // デフォルトで有効
     forceColor: false,
-    verbose: false,
     help: false,
   };
 
@@ -103,13 +101,6 @@ function parseArgsInto(args: string[], options: Options): void {
           process.exit(0);
         }
         break;
-      case "--verbose":
-      case "-v":
-        options.verbose = true;
-        break;
-      case "--no-verbose":
-        options.verbose = false;
-        break;
       case "--help":
       case "-h":
         options.help = true;
@@ -134,7 +125,6 @@ ${chalk.bold("Options:")}
   --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piped or redirected
   -t, --theme <name>         Color theme (use -t without name to list themes)
-  -v, --verbose              Show debug information
   -h, --help                 Show this help message
 
 ${chalk.bold("Environment Variables:")}
@@ -148,24 +138,17 @@ function processLine(line: string, options: Options, visitor: ReturnType<typeof 
     // 字句解析
     const lexResult = LogLexer.tokenize(line);
 
-    if (options.verbose && lexResult.errors.length > 0) {
-      console.error(chalk.red("Lexer errors:"), lexResult.errors);
-    }
+    // Lexer errors are silently ignored
 
     // 構文解析
     logParser.input = lexResult.tokens;
     const cst = logParser.logContent();
 
-    if (options.verbose && logParser.errors.length > 0) {
-      console.error(chalk.red("Parser errors:"), logParser.errors);
-    }
+    // Parser errors are silently ignored
 
     // 色付け
     return visitor.visit(cst);
   } catch (error) {
-    if (options.verbose) {
-      console.error(chalk.red("Processing error:"), error);
-    }
     // エラーが発生した場合は元の行を返す
     return line;
   }
@@ -218,9 +201,6 @@ async function main() {
       const input = await Bun.stdin.text();
 
       if (!input) {
-        if (options.verbose) {
-          console.error(chalk.yellow("No input received"));
-        }
         process.exit(0);
       }
 
