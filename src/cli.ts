@@ -289,7 +289,6 @@ export async function main() {
 export async function run() {
   // Node.js環境でconsoleにAsyncIteratorを追加（CLI実行時のみ必要）
   if (typeof console[Symbol.asyncIterator] === "undefined") {
-    // @ts-expect-error
     console[Symbol.asyncIterator] = async function* () {
       const readline = await import("node:readline");
       const rl = readline.createInterface({

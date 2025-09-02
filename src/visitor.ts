@@ -589,6 +589,6 @@ export class ColorizeVisitor extends BaseVisitor {
 export const colorizeVisitor = new ColorizeVisitor();
 
 // インスタンス作成用のファクトリー関数
-export function createColorizeVisitor(options: { showRelativeTime?: boolean } = {}): ColorizeVisitor {
+export function createColorizeVisitor(options: { showRelativeTime?: boolean; theme?: string } = {}): ColorizeVisitor {
   return new ColorizeVisitor(options);
 }
