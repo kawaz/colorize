@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeEach, afterEach } from "bun:test";
-import { parseArgs, type Options } from "../colorize";
+import { parseArgs, type Options } from "../src/cli";
 
 describe("Option Parsing", () => {
   // 環境変数のバックアップ

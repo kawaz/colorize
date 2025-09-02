@@ -13,10 +13,10 @@
     "README.md"
   ],
   "scripts": {
-    "dev": "bun run colorize.ts",
+    "dev": "bun run bin/colorize",
     "test": "bun test",
     "lint": "bunx biome check . --write",
-    "build": "bun build colorize.ts --outdir=dist --target=bun --minify",
+    "build": "bun build src/cli.ts --outfile=dist/colorize.js --target=bun --minify",
     "prepublishOnly": "bun run build",
     "release": "bun run release:patch",
     "release:patch": "npm version patch && git push && git push --tags",

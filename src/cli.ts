@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 
 import chalk from "chalk";
-import { LogLexer } from "./src/lexer";
-import { processMultiline } from "./src/multiline";
-import { logParser } from "./src/parser";
-import { themeInfo } from "./src/theme";
-import { deduplicateTimestamps } from "./src/timestamp-dedup";
-import { createColorizeVisitor } from "./src/visitor";
+import { LogLexer } from "./lexer";
+import { processMultiline } from "./multiline";
+import { logParser } from "./parser";
+import { themeInfo } from "./theme";
+import { deduplicateTimestamps } from "./timestamp-dedup";
+import { createColorizeVisitor } from "./visitor";
 
 // デフォルトで色出力を有効化（パイプ経由でも色を出力）
 // main関数内でオプションに応じて上書きされる
