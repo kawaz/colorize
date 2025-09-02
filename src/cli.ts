@@ -161,7 +161,7 @@ ${chalk.bold("Environment Variables:")}
 `);
 }
 
-function processLine(line: string, _options: Options, visitor: ReturnType<typeof createColorizeVisitor>): string {
+function processLine(line: string, visitor: ReturnType<typeof createColorizeVisitor>): string {
   try {
     // 字句解析
     const lexResult = LogLexer.tokenize(line);
@@ -255,7 +255,7 @@ export async function main() {
           // 空行はそのまま
           colorizedLines.push(line);
         } else {
-          colorizedLines.push(processLine(line, options, visitor));
+          colorizedLines.push(processLine(line, visitor));
         }
       }
 
@@ -275,7 +275,7 @@ export async function main() {
         if (processedLine.trim() === "") {
           console.log(processedLine);
         } else {
-          console.log(processLine(processedLine, options, visitor));
+          console.log(processLine(processedLine, visitor));
         }
       }
     }
