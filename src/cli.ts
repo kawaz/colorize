@@ -1,5 +1,8 @@
 #!/usr/bin/env bun
 
+import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import chalk from "chalk";
 import { getBuildInfo } from "./build-info.macro" with { type: "macro" };
 import { LogLexer } from "./lexer";
@@ -25,6 +28,7 @@ export interface Options {
   forceColor: boolean;
   help: boolean;
   version: boolean;
+  upgrade: boolean;
   theme?: string;
 }
 
@@ -36,6 +40,7 @@ export function parseArgs(args: string[]): Options {
     forceColor: false,
     help: false,
     version: false,
+    upgrade: false,
   };
 
   // 環境変数からオプションを読み込み
@@ -110,6 +115,9 @@ function parseArgsInto(args: string[], options: Options): void {
       case "-V":
         options.version = true;
         break;
+      case "upgrade":
+        options.upgrade = true;
+        break;
     }
   }
 }
@@ -118,6 +126,67 @@ function showVersion() {
   // シンプルなバージョン表示（一般的なツールと同様）
   const dirtyFlag = BUILD_INFO.gitDirty ? "-dirty" : "";
   console.log(`${BUILD_INFO.name} version ${BUILD_INFO.version} (${BUILD_INFO.gitCommit}${dirtyFlag})`);
+}
+
+async function performUpgrade() {
+  console.log(chalk.bold("🔄 Checking for updates..."));
+
+  try {
+    // 実行ファイルのパスを取得
+    const scriptPath = process.argv[1];
+    console.log(chalk.dim(`Current installation: ${scriptPath}`));
+
+    // グローバルインストールかどうかを判定
+    const isGlobal =
+      scriptPath.includes("/npm/global/") ||
+      scriptPath.includes("/.npm/") ||
+      scriptPath.includes("/.bun/") ||
+      scriptPath.includes("/node_modules/.bin/");
+
+    // パッケージマネージャーを検出
+    let packageManager = "npm";
+    let installCommand = "install";
+
+    // Bunでインストールされているか確認
+    if (scriptPath.includes("/.bun/")) {
+      packageManager = "bun";
+      installCommand = "add";
+    } else if (existsSync(join(process.cwd(), "bun.lockb"))) {
+      // ローカルにbun.lockbがある場合
+      packageManager = "bun";
+      installCommand = "add";
+    }
+
+    // 最新バージョンを確認
+    const currentVersion = BUILD_INFO.version;
+    console.log(chalk.dim(`Current version: ${currentVersion}`));
+
+    const latestVersionCmd = `npm view @kawaz/colorize version`;
+    const latestVersion = execSync(latestVersionCmd, { encoding: "utf-8" }).trim();
+    console.log(chalk.dim(`Latest version: ${latestVersion}`));
+
+    if (currentVersion === latestVersion) {
+      console.log(chalk.green("✅ Already up to date!"));
+      return;
+    }
+
+    // アップグレードコマンドを構築
+    const globalFlag = isGlobal ? "-g" : "";
+    const upgradeCmd =
+      packageManager === "npm"
+        ? `npm ${installCommand} ${globalFlag} @kawaz/colorize@latest`
+        : `bun ${installCommand} ${globalFlag} @kawaz/colorize@latest`;
+
+    console.log(chalk.yellow(`\n📦 Run the following command to upgrade:`));
+    console.log(chalk.cyan(`  ${upgradeCmd}`));
+
+    // 実行確認
+    console.log(chalk.dim("\nNote: For security reasons, colorize cannot update itself directly."));
+    console.log(chalk.dim("Please run the command above manually."));
+  } catch (error) {
+    console.error(chalk.red("Failed to check for updates:"), error);
+    process.exit(1);
+  }
 }
 
 function showVersionVerbose() {
@@ -199,6 +268,11 @@ export async function main() {
     } else {
       showVersion();
     }
+    process.exit(0);
+  }
+
+  if (options.upgrade) {
+    await performUpgrade();
     process.exit(0);
   }
 
