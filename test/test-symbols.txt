@@ -1,0 +1,14 @@
+Normal JSON: {"key": "value", "num": 123}
+Broken JSON: {"key": "value", "num": 123
+Missing bracket: {"key": "value", "num": 123, ...
+Array: [1, 2, 3]
+Broken array: [1, 2, 3
+Mixed: [::]:8080
+Parentheses: function(arg1, arg2)
+Key-value: name=value
+Path: /api/v1/users
+Hash: #comment
+Pipe: cmd1 | cmd2
+Dots: file.txt
+Underscore: snake_case
+Semicolon: line1; line2

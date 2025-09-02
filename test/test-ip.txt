@@ -1,0 +1,7 @@
+2025-09-01T02:40:00.000Z IPv4 client: 192.168.1.1 connected
+2025-09-01T02:40:01.000Z IPv6 client: 2001:db8:85a3::8a2e:370:7334 connected
+2025-09-01T02:40:02.000Z Server listening on 0.0.0.0:8080
+2025-09-01T02:40:03.000Z Server listening on [::]:8080
+2025-09-01T02:40:04.000Z Request from 10.0.0.1 to 172.16.254.1
+2025-09-01T02:40:05.000Z Request from fe80::1%lo0 to ::1
+2025-09-01T02:40:06.000Z Mixed: 127.0.0.1 and 2001:db8::1 are both localhost

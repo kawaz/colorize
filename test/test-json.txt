@@ -1,0 +1,7 @@
+2025-09-01T02:30:00.000Z Processing data: {...}
+2025-09-01T02:30:01.000Z Result: [Object ...]
+2025-09-01T02:30:02.000Z Array data: [...]
+2025-09-01T02:30:03.000Z Complex: {id: 123, data: {...}, items: [Object ...]}
+2025-09-01T02:30:04.000Z Truncated: {very: "long", data: "here", more: "fields", ...}
+2025-09-01T02:30:05.000Z Normal object: {name: "test", value: 42}
+2025-09-01T02:30:06.000Z Normal array: [1, 2, 3, 4, 5]

@@ -1,0 +1,11 @@
+2025-09-01T07:11:19.253061661Z 35.75.153.57 kyellapitestkey GET /api/transactions?accountId=64e6edf58aa26d79e08b24ce&offset=7&limit=100 200 16246 - 12136.993 ms Ruby
+20250901T071107Z-15d949fd7bcvsmmjhC1OSAsky40000000g90000000000eer
+GET /api/users 200
+POST /api/login 401
+PUT /api/user/123 204
+DELETE /api/session 200
+GET /health
+GET /api/search?q=test&page=1&size=20 200
+Test-15 should not be colored
+-15 at start should be colored
+value-15-test middle case

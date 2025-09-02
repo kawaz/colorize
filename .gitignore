@@ -1,5 +1,7 @@
-# Test directory
-test/
+# Test output/temp files (but keep test source files)
+test/*.tmp
+test/*.log
+test/output/
 
 # Documentation samples (but not setup docs)
 docs/sample-*

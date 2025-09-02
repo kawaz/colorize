@@ -1,0 +1,12 @@
+IPv6 Full: 2001:0db8:85a3:0000:0000:8a2e:0370:7334
+IPv6 Compressed: 2001:db8:85a3::8a2e:370:7334
+IPv6 Loopback: ::1
+IPv6 Link-local: fe80::1%lo0
+IPv6 Link-local: fe80::dead:beef%eth0
+IPv6 Mapped IPv4: ::ffff:192.168.1.1
+IPv6 Mapped IPv4: ::ffff:10.0.0.1
+IPv6 Short: 2001:db8::1
+IPv6 Very short: ::
+IPv4 Standard: 192.168.1.1
+IPv4 Loopback: 127.0.0.1
+Mixed line: From 192.168.1.1 to 2001:db8::1 via ::ffff:10.0.0.1

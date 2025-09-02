@@ -1,0 +1,13 @@
+Simple string: "Hello World"
+With newline: "Hello\nWorld"
+With tab: "Name\tValue"
+With quotes: "He said \"Hello\""
+With backslash: "C:\\Users\\test"
+Unicode escape: "Unicode: \u3042"
+Unicode brace: "Emoji: \u{1F600}"
+Hex escape: "Hex: \x41"
+Octal escape: "Octal: \101"
+Multiple escapes: "Line 1\nLine 2\tTab\r\nWindows"
+Single quote: 'It\'s a test'
+Mixed: "Error: \n\tFile not found at \"C:\\temp\\file.txt\""
+JSON: {"message": "Hello\nWorld", "path": "C:\\Users\\test"}
