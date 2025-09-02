@@ -1,6 +1,6 @@
-import { execSync } from "child_process";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // ビルド時に実行されるマクロ
 export function getBuildInfo() {
@@ -19,7 +19,7 @@ export function getBuildInfo() {
     gitDirty = gitStatus.length > 0;
     // コミット日時を取得（ISO形式）
     gitCommitDate = execSync("git show -s --format=%cI HEAD", { encoding: "utf-8" }).trim();
-  } catch (e) {
+  } catch (_e) {
     // Git情報が取得できない場合は無視
   }
 

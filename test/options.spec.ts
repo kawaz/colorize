@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { type Options, parseArgs } from "../src/cli";
+import { parseArgs } from "../src/cli";
 
 describe("Option Parsing", () => {
   // 環境変数のバックアップ
@@ -65,7 +65,6 @@ describe("Option Parsing", () => {
       const options = parseArgs(["-r"]);
       expect(options.relativeTime).toBe(true);
     });
-
 
     test("--force-color enables forced color", () => {
       const options = parseArgs(["--force-color"]);

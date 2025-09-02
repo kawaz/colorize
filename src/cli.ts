@@ -161,7 +161,7 @@ ${chalk.bold("Environment Variables:")}
 `);
 }
 
-function processLine(line: string, options: Options, visitor: ReturnType<typeof createColorizeVisitor>): string {
+function processLine(line: string, _options: Options, visitor: ReturnType<typeof createColorizeVisitor>): string {
   try {
     // 字句解析
     const lexResult = LogLexer.tokenize(line);
@@ -176,7 +176,7 @@ function processLine(line: string, options: Options, visitor: ReturnType<typeof 
 
     // 色付け
     return visitor.visit(cst);
-  } catch (error) {
+  } catch (_error) {
     // エラーが発生した場合は元の行を返す
     return line;
   }
@@ -220,7 +220,7 @@ export async function main() {
       // 通常モード（一括読み込み）
       let input: string;
 
-      if (typeof Bun !== 'undefined') {
+      if (typeof Bun !== "undefined") {
         input = await Bun.stdin.text();
       } else {
         // Node.js環境でstdinを全て読み込む
@@ -228,7 +228,7 @@ export async function main() {
         for await (const chunk of process.stdin) {
           chunks.push(chunk);
         }
-        input = Buffer.concat(chunks).toString('utf-8');
+        input = Buffer.concat(chunks).toString("utf-8");
       }
 
       if (!input) {
@@ -288,14 +288,14 @@ export async function main() {
 // mainを実行する関数
 export async function run() {
   // Node.js環境でconsoleにAsyncIteratorを追加（CLI実行時のみ必要）
-  if (typeof console[Symbol.asyncIterator] === 'undefined') {
-    // @ts-ignore
+  if (typeof console[Symbol.asyncIterator] === "undefined") {
+    // @ts-expect-error
     console[Symbol.asyncIterator] = async function* () {
-      const readline = await import('node:readline');
+      const readline = await import("node:readline");
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
-        terminal: false
+        terminal: false,
       });
 
       for await (const line of rl) {
