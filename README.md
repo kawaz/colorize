@@ -14,6 +14,22 @@ A powerful log colorization tool built with Chevrotain parser for beautiful and 
 
 ## Installation
 
+### Using npm/bunx (Recommended)
+
+```bash
+# Run directly without installation
+npx @kawaz/colorize
+# or
+bunx @kawaz/colorize
+
+# Install globally
+npm install -g @kawaz/colorize
+# or
+bun add -g @kawaz/colorize
+```
+
+### From source
+
 ```bash
 # Clone the repository
 git clone https://github.com/kawaz/colorize.git
@@ -25,11 +41,8 @@ bun install
 # Build the project
 bun run build
 
-# Make it executable
-chmod +x dist/colorize.js
-
-# Add to your PATH (optional)
-sudo ln -s $(pwd)/dist/colorize.js /usr/local/bin/colorize
+# Run directly
+./dist/colorize.js
 ```
 
 ## Usage
@@ -51,6 +64,10 @@ docker logs -f container_name | colorize
 
 # With kubectl
 kubectl logs -f pod_name | colorize
+
+# Run without installation using npx/bunx
+cat app.log | npx @kawaz/colorize
+tail -f app.log | bunx @kawaz/colorize -t github
 ```
 
 ### Options
