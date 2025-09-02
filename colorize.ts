@@ -14,7 +14,7 @@ if (!process.env.FORCE_COLOR) {
   process.env.FORCE_COLOR = "1";
 }
 
-interface Options {
+export interface Options {
   joinMultiline: boolean;
   deduplicateTimestamps: boolean;
   relativeTime: boolean;
@@ -24,7 +24,7 @@ interface Options {
   theme?: string;
 }
 
-function parseArgs(args: string[]): Options {
+export function parseArgs(args: string[]): Options {
   const options: Options = {
     joinMultiline: false,
     deduplicateTimestamps: false,  // デフォルトでOFF
