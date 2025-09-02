@@ -14,7 +14,7 @@
     "README.md"
   ],
   "scripts": {
-    "dev": "bun run bin/colorize",
+    "dev": "bun run bin/colorize-dev",
     "test": "bun test",
     "lint": "bunx biome check . --write",
     "build": "bun build src/cli.ts --outfile=dist/colorize.js --target=node --minify",

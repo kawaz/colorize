@@ -11,7 +11,6 @@ import { createColorizeVisitor } from "./visitor";
 
 // Node.js環境でconsoleにAsyncIteratorを追加
 if (typeof console[Symbol.asyncIterator] === 'undefined') {
-  // @ts-ignore
   console[Symbol.asyncIterator] = async function* () {
     const readline = await import('node:readline');
     const rl = readline.createInterface({
@@ -19,7 +18,7 @@ if (typeof console[Symbol.asyncIterator] === 'undefined') {
       output: process.stdout,
       terminal: false
     });
-    
+
     for await (const line of rl) {
       yield line;
     }
@@ -199,7 +198,7 @@ function processLine(line: string, options: Options, visitor: ReturnType<typeof 
   }
 }
 
-async function main() {
+export async function main() {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.help) {
@@ -236,7 +235,7 @@ async function main() {
     if (options.joinMultiline) {
       // 通常モード（一括読み込み）
       let input: string;
-      
+
       if (typeof Bun !== 'undefined') {
         input = await Bun.stdin.text();
       } else {
@@ -302,19 +301,22 @@ async function main() {
   }
 }
 
-// エラーハンドリング
-process.on("uncaughtException", (err) => {
-  console.error(chalk.red("Uncaught exception:"), err.message);
-  process.exit(1);
-});
+// mainを実行する関数
+export async function run() {
+  // エラーハンドリング
+  process.on("uncaughtException", (err) => {
+    console.error(chalk.red("Uncaught exception:"), err.message);
+    process.exit(1);
+  });
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error(chalk.red("Unhandled rejection at:"), promise, chalk.red("reason:"), reason);
-  process.exit(1);
-});
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error(chalk.red("Unhandled rejection at:"), promise, chalk.red("reason:"), reason);
+    process.exit(1);
+  });
 
-// メイン処理実行
-main().catch((err) => {
-  console.error(chalk.red("Fatal error:"), err);
-  process.exit(1);
-});
+  // メイン処理実行
+  await main().catch((err) => {
+    console.error(chalk.red("Fatal error:"), err);
+    process.exit(1);
+  });
+}

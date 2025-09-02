@@ -1,3 +1,5 @@
 #!/bin/sh
 ":" //# comment; exec "$(command -v bun || command -v node)" "$0" "$@"
-import "../dist/colorize.js";
+import { run } from "../dist/colorize.js";
+
+await run();
