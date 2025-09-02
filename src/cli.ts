@@ -124,9 +124,9 @@ function parseArgsInto(args: string[], options: Options): void {
 
 function showVersion() {
   console.log(`${chalk.bold(BUILD_INFO.name)} v${BUILD_INFO.version}`);
-  console.log(`  Git: ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})`);
+  console.log(`  Commit: ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})`);
   console.log(`  Built: ${BUILD_INFO.buildDate}`);
-  console.log(`  Bun: v${BUILD_INFO.bunVersion}`);
+  console.log(`  Built with: Bun v${BUILD_INFO.bunVersion}`);
 }
 
 function showHelp() {
