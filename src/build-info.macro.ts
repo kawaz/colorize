@@ -19,7 +19,7 @@ export function getBuildInfo() {
     gitDirty = gitStatus.length > 0;
     // コミット日時を取得（ISO形式）
     gitCommitDate = execSync("git show -s --format=%cI HEAD", { encoding: "utf-8" }).trim();
-  } catch (_e) {
+  } catch {
     // Git情報が取得できない場合は無視
   }
 

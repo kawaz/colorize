@@ -176,7 +176,7 @@ function processLine(line: string, _options: Options, visitor: ReturnType<typeof
 
     // 色付け
     return visitor.visit(cst);
-  } catch (_error) {
+  } catch {
     // エラーが発生した場合は元の行を返す
     return line;
   }
