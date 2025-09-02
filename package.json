@@ -1,15 +1,49 @@
 {
   "name": "@kawaz/colorize",
   "version": "0.1.0",
+  "description": "A powerful log colorization tool built with Chevrotain parser for beautiful and readable log output",
   "type": "module",
+  "main": "./dist/colorize.js",
   "bin": {
-    "colorize": "./colorize.ts"
+    "colorize": "./dist/colorize.js"
   },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "dev": "bun run colorize.ts",
     "test": "bun test",
     "lint": "bunx biome check . --write",
-    "build": "bun build colorize.ts --outdir=dist --target=bun"
+    "build": "bun build colorize.ts --outdir=dist --target=bun --minify",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "log",
+    "logs",
+    "colorize",
+    "colorizer",
+    "highlighting",
+    "syntax",
+    "parser",
+    "chevrotain",
+    "cli",
+    "terminal",
+    "console"
+  ],
+  "author": "kawaz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kawaz/colorize.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kawaz/colorize/issues"
+  },
+  "homepage": "https://github.com/kawaz/colorize#readme",
+  "engines": {
+    "bun": ">=1.0.0"
   },
   "dependencies": {
     "chevrotain": "^11.0.0",

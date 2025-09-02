@@ -1,8 +1,8 @@
 # Test directory
 test/
 
-# Documentation samples
-docs/
+# Documentation samples (but not setup docs)
+docs/sample-*
 
 # Build output
 dist/
