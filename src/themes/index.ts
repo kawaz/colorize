@@ -4,6 +4,7 @@ export { draculaTheme } from "./dracula";
 export { githubTheme } from "./github";
 export { githubDarkTheme } from "./github-dark";
 export { monokaiTheme } from "./monokai";
+export { noneTheme } from "./none";
 export { nordTheme } from "./nord";
 export { productionTheme } from "./production";
 export { solarizedDarkTheme } from "./solarized-dark";
@@ -15,6 +16,7 @@ import { draculaTheme } from "./dracula";
 import { githubTheme } from "./github";
 import { githubDarkTheme } from "./github-dark";
 import { monokaiTheme } from "./monokai";
+import { noneTheme } from "./none";
 import { nordTheme } from "./nord";
 import { productionTheme } from "./production";
 import { solarizedDarkTheme } from "./solarized-dark";
@@ -30,6 +32,8 @@ export function getTheme(themeName?: string): Theme {
   const name = themeName?.toLowerCase();
 
   switch (name) {
+    case "none":
+      return noneTheme;
     case "test":
       return testTheme;
     case "production":
@@ -60,6 +64,7 @@ export function getTheme(themeName?: string): Theme {
 
 // 利用可能なテーマ一覧
 export const availableThemes = [
+  "none",
   "test",
   "production",
   "monokai",
@@ -73,6 +78,7 @@ export const availableThemes = [
 
 // テーマ情報
 export const themeInfo = {
+  none: "No colors (plain text output)",
   test: "Detailed colors for debugging",
   production: "Unified colors for readability (default)",
   monokai: "Monokai color scheme",

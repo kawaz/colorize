@@ -101,6 +101,9 @@ function parseArgsInto(args: string[], options: Options): void {
           process.exit(0);
         }
         break;
+      case "--no-theme":
+        options.theme = "none";
+        break;
       case "--help":
       case "-h":
         options.help = true;
@@ -124,7 +127,7 @@ ${chalk.bold("Options:")}
   -r, --relative-time        Show relative time next to timestamps (e.g., 2.5h)
   --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piped or redirected
-  -t, --theme <name>         Color theme (use -t without name to list themes)
+  -t, --theme <name>         Color theme (use -t without name to list, --no-theme or -t none for plain text)
   -h, --help                 Show this help message
 
 ${chalk.bold("Environment Variables:")}
