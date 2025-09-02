@@ -1,6 +1,6 @@
 {
   "name": "@kawaz/colorize",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A powerful log colorization tool built with Chevrotain parser for beautiful and readable log output",
   "type": "module",
   "main": "./dist/colorize.js",
