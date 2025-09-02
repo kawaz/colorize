@@ -137,16 +137,6 @@ ${chalk.bold("Options:")}
   -v, --verbose              Show debug information
   -h, --help                 Show this help message
 
-${chalk.bold("Examples:")}
-  ${chalk.gray("# Basic usage")}
-  cat docs/sample-log-antenna-server.txt | colorize
-
-  ${chalk.gray("# Keep multiline structure")}
-  cat docs/sample-log-antenna-gatherer.txt | colorize -n
-
-  ${chalk.gray("# Real-time log monitoring")}
-  tail -f /var/log/app.log | colorize
-
 ${chalk.bold("Environment Variables:")}
   COLORIZE_OPTIONS   Set default options (e.g., export COLORIZE_OPTIONS="-r -t github")
                      Command-line arguments override environment settings
