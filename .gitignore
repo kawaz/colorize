@@ -1,10 +1,5 @@
-# Debug and test files
-debug_*.js
-test_*.js
-test-*.txt
-test-*.sh
-test-*.ts
-test*.ts
+# Test directory
+test/
 
 # Documentation samples
 docs/
