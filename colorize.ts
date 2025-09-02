@@ -111,7 +111,7 @@ function parseArgsInto(args: string[], options: Options): void {
 
 function showHelp() {
   console.log(`
-${chalk.bold("colorize")} - Log colorization tool using Chevrotain parser
+${chalk.bold("colorize")} - Log colorization tool
 
 ${chalk.bold("Usage:")}
   cat logfile.txt | colorize [options]
