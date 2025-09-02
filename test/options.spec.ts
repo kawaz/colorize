@@ -1,5 +1,5 @@
-import { expect, test, describe, beforeEach, afterEach } from "bun:test";
-import { parseArgs, type Options } from "../src/cli";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { type Options, parseArgs } from "../src/cli";
 
 describe("Option Parsing", () => {
   // 環境変数のバックアップ
@@ -172,14 +172,7 @@ describe("Option Parsing", () => {
 
   describe("Complex scenarios", () => {
     test("all options together", () => {
-      const options = parseArgs([
-        "-j",
-        "--dedup-timestamps",
-        "-r",
-        "--no-line-buffered",
-        "-c",
-        "-t", "tokyo-night"
-      ]);
+      const options = parseArgs(["-j", "--dedup-timestamps", "-r", "--no-line-buffered", "-c", "-t", "tokyo-night"]);
       expect(options.joinMultiline).toBe(true);
       expect(options.deduplicateTimestamps).toBe(true);
       expect(options.relativeTime).toBe(true);
@@ -189,21 +182,13 @@ describe("Option Parsing", () => {
     });
 
     test("enable and disable same option multiple times", () => {
-      const options = parseArgs([
-        "--dedup-timestamps",
-        "--no-dedup-timestamps",
-        "--dedup-timestamps"
-      ]);
+      const options = parseArgs(["--dedup-timestamps", "--no-dedup-timestamps", "--dedup-timestamps"]);
       expect(options.deduplicateTimestamps).toBe(true);
     });
 
     test("environment with all options, command-line overrides some", () => {
       process.env.COLORIZE_OPTIONS = "-j --dedup-timestamps -r --no-line-buffered -c -t github";
-      const options = parseArgs([
-        "--no-join-multiline",
-        "--line-buffered",
-        "--no-theme"
-      ]);
+      const options = parseArgs(["--no-join-multiline", "--line-buffered", "--no-theme"]);
       expect(options.joinMultiline).toBe(false); // overridden
       expect(options.deduplicateTimestamps).toBe(true); // from env
       expect(options.relativeTime).toBe(true); // from env

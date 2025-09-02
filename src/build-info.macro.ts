@@ -4,16 +4,14 @@ import { join } from "path";
 
 // ビルド時に実行されるマクロ
 export function getBuildInfo() {
-  const packageJson = JSON.parse(
-    readFileSync(join(import.meta.dir, "../package.json"), "utf-8")
-  );
+  const packageJson = JSON.parse(readFileSync(join(import.meta.dir, "../package.json"), "utf-8"));
 
   // Git情報を取得
   let gitCommit = "unknown";
   let gitBranch = "unknown";
   let gitDirty = false;
   let gitCommitDate = "unknown";
-  
+
   try {
     gitCommit = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
     gitBranch = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8" }).trim();

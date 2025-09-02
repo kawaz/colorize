@@ -32,7 +32,7 @@ export interface Options {
 export function parseArgs(args: string[]): Options {
   const options: Options = {
     joinMultiline: false,
-    deduplicateTimestamps: false,  // デフォルトでOFF
+    deduplicateTimestamps: false, // デフォルトでOFF
     relativeTime: false,
     lineBuffered: true, // デフォルトで有効
     forceColor: false,
@@ -124,19 +124,18 @@ function parseArgsInto(args: string[], options: Options): void {
 
 function showVersion() {
   // シンプルなバージョン表示（一般的なツールと同様）
-  const dirtyFlag = BUILD_INFO.gitDirty ? '-dirty' : '';
+  const dirtyFlag = BUILD_INFO.gitDirty ? "-dirty" : "";
   console.log(`${BUILD_INFO.name} version ${BUILD_INFO.version} (${BUILD_INFO.gitCommit}${dirtyFlag})`);
 }
 
 function showVersionVerbose() {
   // 詳細なバージョン情報
-  const dirtyFlag = BUILD_INFO.gitDirty ? '-dirty' : '';
+  const dirtyFlag = BUILD_INFO.gitDirty ? "-dirty" : "";
   // ISO文字列をDateに変換して再度ISOStringで出力（UTC時刻に正規化）
-  const commitDate = BUILD_INFO.gitCommitDate !== 'unknown' 
-    ? new Date(BUILD_INFO.gitCommitDate).toISOString() 
-    : 'unknown';
+  const commitDate =
+    BUILD_INFO.gitCommitDate !== "unknown" ? new Date(BUILD_INFO.gitCommitDate).toISOString() : "unknown";
   const buildDate = new Date(BUILD_INFO.buildDate).toISOString();
-  
+
   console.log(`${chalk.bold(BUILD_INFO.name)}`);
   console.log(`  Version:     ${BUILD_INFO.version}`);
   console.log(`  Commit:      ${BUILD_INFO.gitCommit}${dirtyFlag} (${BUILD_INFO.gitBranch})`);
@@ -202,8 +201,8 @@ async function main() {
 
   if (options.version) {
     // --version --verbose または --version -v で詳細表示
-    const verboseIndex = process.argv.indexOf('--verbose');
-    const vIndex = process.argv.indexOf('-v');
+    const verboseIndex = process.argv.indexOf("--verbose");
+    const vIndex = process.argv.indexOf("-v");
     if (verboseIndex !== -1 || vIndex !== -1) {
       showVersionVerbose();
     } else {
@@ -219,9 +218,9 @@ async function main() {
   }
 
   // Visitorインスタンスを作成（相対時間オプションとテーマを渡す）
-  const visitor = createColorizeVisitor({ 
+  const visitor = createColorizeVisitor({
     showRelativeTime: options.relativeTime,
-    theme: options.theme 
+    theme: options.theme,
   });
 
   try {
