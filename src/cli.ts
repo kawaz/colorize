@@ -9,22 +9,6 @@ import { themeInfo } from "./theme";
 import { deduplicateTimestamps } from "./timestamp-dedup";
 import { createColorizeVisitor } from "./visitor";
 
-// Node.js環境でconsoleにAsyncIteratorを追加
-if (typeof console[Symbol.asyncIterator] === 'undefined') {
-  console[Symbol.asyncIterator] = async function* () {
-    const readline = await import('node:readline');
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-      terminal: false
-    });
-
-    for await (const line of rl) {
-      yield line;
-    }
-  };
-}
-
 // ビルド時に情報を埋め込む
 const BUILD_INFO = getBuildInfo();
 
@@ -303,6 +287,23 @@ export async function main() {
 
 // mainを実行する関数
 export async function run() {
+  // Node.js環境でconsoleにAsyncIteratorを追加（CLI実行時のみ必要）
+  if (typeof console[Symbol.asyncIterator] === 'undefined') {
+    // @ts-ignore
+    console[Symbol.asyncIterator] = async function* () {
+      const readline = await import('node:readline');
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false
+      });
+
+      for await (const line of rl) {
+        yield line;
+      }
+    };
+  }
+
   // エラーハンドリング
   process.on("uncaughtException", (err) => {
     console.error(chalk.red("Uncaught exception:"), err.message);
