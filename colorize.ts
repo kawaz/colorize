@@ -117,8 +117,8 @@ function showHelp() {
 ${chalk.bold("colorize")} - Log colorization tool
 
 ${chalk.bold("Usage:")}
-  cat logfile.txt | colorize [options]
-  tail -f app.log | colorize [options]
+  cat app.log | colorize [options]
+  tail -f app.log | colorize -c | less -R
 
 ${chalk.bold("Options:")}
   -j, --join-multiline       Join multiline log entries (disables line buffering)
