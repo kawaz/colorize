@@ -131,7 +131,7 @@ ${chalk.bold("Options:")}
   -j, --join-multiline       Join multiline log entries (disables line buffering)
   --no-dedup-timestamps      Don't remove duplicate timestamps (e.g., kubectl --timestamps)
   -r, --relative-time        Show relative time next to timestamps (e.g., 2.5h)
-  --no-line-buffered         Disable line buffering for batch processing
+  --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piped or redirected
   -t, --theme <name>         Color theme (see below for available themes)
   -v, --verbose              Show debug information

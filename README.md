@@ -79,7 +79,7 @@ Options:
   -j, --join-multiline       Join multiline log entries (disables line buffering)
   --no-dedup-timestamps      Don't remove duplicate timestamps (e.g., kubectl --timestamps)
   -r, --relative-time        Show relative time between log entries
-  --no-line-buffered         Process entire input at once (batch mode)
+  --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piping
   -t, --theme <name>         Select color theme (default: production)
   -v, --verbose              Show debug information
