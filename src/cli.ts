@@ -131,11 +131,17 @@ function showVersion() {
 function showVersionVerbose() {
   // 詳細なバージョン情報
   const dirtyFlag = BUILD_INFO.gitDirty ? '-dirty' : '';
+  // ISO文字列をDateに変換して再度ISOStringで出力（UTC時刻に正規化）
+  const commitDate = BUILD_INFO.gitCommitDate !== 'unknown' 
+    ? new Date(BUILD_INFO.gitCommitDate).toISOString() 
+    : 'unknown';
+  const buildDate = new Date(BUILD_INFO.buildDate).toISOString();
+  
   console.log(`${chalk.bold(BUILD_INFO.name)}`);
   console.log(`  Version:     ${BUILD_INFO.version}`);
   console.log(`  Commit:      ${BUILD_INFO.gitCommit}${dirtyFlag} (${BUILD_INFO.gitBranch})`);
-  console.log(`  Commit date: ${BUILD_INFO.gitCommitDate}`);
-  console.log(`  Build date:  ${BUILD_INFO.buildDate}`);
+  console.log(`  Commit date: ${commitDate}`);
+  console.log(`  Build date:  ${buildDate}`);
   console.log(`  Built with:  Bun v${BUILD_INFO.bunVersion}`);
 }
 
