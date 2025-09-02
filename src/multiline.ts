@@ -19,10 +19,10 @@ export class MultilineProcessor {
       return input;
     }
 
-    const lines = input.split('\n');
+    const lines = input.split("\n");
     const result: string[] = [];
     let currentBlock: string[] = [];
-    let blockType: 'json' | 'continuation' | null = null;
+    let blockType: "json" | "continuation" | null = null;
     let openBraces = 0;
     let openSquares = 0;
 
@@ -31,7 +31,7 @@ export class MultilineProcessor {
       const trimmed = line.trim();
 
       // 空行の処理
-      if (trimmed === '') {
+      if (trimmed === "") {
         this.flushBlock(currentBlock, result, blockType);
         currentBlock = [];
         blockType = null;
@@ -43,10 +43,10 @@ export class MultilineProcessor {
       if (this.isJsonObjectStart(line)) {
         this.flushBlock(currentBlock, result, blockType);
         currentBlock = [line];
-        blockType = 'json';
-        openBraces = this.countChar(line, '{') - this.countChar(line, '}');
-        openSquares = this.countChar(line, '[') - this.countChar(line, ']');
-        
+        blockType = "json";
+        openBraces = this.countChar(line, "{") - this.countChar(line, "}");
+        openSquares = this.countChar(line, "[") - this.countChar(line, "]");
+
         // 1行で完結している場合
         if (openBraces === 0 && openSquares === 0) {
           result.push(line);
@@ -60,10 +60,10 @@ export class MultilineProcessor {
       if (this.isJsonArrayStart(line)) {
         this.flushBlock(currentBlock, result, blockType);
         currentBlock = [line];
-        blockType = 'json';
-        openBraces = this.countChar(line, '{') - this.countChar(line, '}');
-        openSquares = this.countChar(line, '[') - this.countChar(line, ']');
-        
+        blockType = "json";
+        openBraces = this.countChar(line, "{") - this.countChar(line, "}");
+        openSquares = this.countChar(line, "[") - this.countChar(line, "]");
+
         // 1行で完結している場合
         if (openBraces === 0 && openSquares === 0) {
           result.push(line);
@@ -74,10 +74,10 @@ export class MultilineProcessor {
       }
 
       // JSONブロック内の処理
-      if (blockType === 'json') {
+      if (blockType === "json") {
         currentBlock.push(line);
-        openBraces += this.countChar(line, '{') - this.countChar(line, '}');
-        openSquares += this.countChar(line, '[') - this.countChar(line, ']');
+        openBraces += this.countChar(line, "{") - this.countChar(line, "}");
+        openSquares += this.countChar(line, "[") - this.countChar(line, "]");
 
         // JSONブロックの終了
         if (openBraces <= 0 && openSquares <= 0) {
@@ -90,14 +90,17 @@ export class MultilineProcessor {
       }
 
       // インデントによる継続行の検出
-      if (this.isContinuationLine(line, i > 0 ? lines[i - 1] : '')) {
-        if (blockType !== 'continuation') {
+      if (this.isContinuationLine(line, i > 0 ? lines[i - 1] : "")) {
+        if (blockType !== "continuation") {
           this.flushBlock(currentBlock, result, blockType);
           // 前の行を含める
           if (i > 0 && result.length > 0) {
-            currentBlock = [result.pop()!];
+            const lastItem = result.pop();
+            if (lastItem !== undefined) {
+              currentBlock = [lastItem];
+            }
           }
-          blockType = 'continuation';
+          blockType = "continuation";
         }
         currentBlock.push(line);
         continue;
@@ -113,15 +116,15 @@ export class MultilineProcessor {
     // 最後のブロックをフラッシュ
     this.flushBlock(currentBlock, result, blockType);
 
-    return result.join('\n');
+    return result.join("\n");
   }
 
-  private flushBlock(block: string[], result: string[], blockType: 'json' | 'continuation' | null) {
+  private flushBlock(block: string[], result: string[], blockType: "json" | "continuation" | null) {
     if (block.length === 0) return;
 
-    if (blockType === 'json') {
+    if (blockType === "json") {
       result.push(this.joinJsonBlock(block));
-    } else if (blockType === 'continuation') {
+    } else if (blockType === "continuation") {
       result.push(this.joinContinuationBlock(block));
     } else {
       result.push(...block);
@@ -129,49 +132,47 @@ export class MultilineProcessor {
   }
 
   private joinJsonBlock(lines: string[]): string {
-    if (lines.length === 0) return '';
+    if (lines.length === 0) return "";
     if (lines.length === 1) return lines[0];
 
     // 最初の行のインデントを保持
-    const firstLine = lines[0];
-    const indent = firstLine.match(/^\s*/)?.[0] || '';
+    // const firstLine = lines[0];
+    // const _indent = firstLine.match(/^\s*/)?.[0] || "";
 
     // 各行を処理
     const processed = lines.map((line, index) => {
       if (index === 0) return line;
-      
+
       const trimmed = line.trim();
-      if (trimmed === '') return '';
-      
+      if (trimmed === "") return "";
+
       // コンマで終わる行はそのまま、それ以外はスペースを追加
       if (this.options.preserveIndent && index > 0) {
-        return ' ' + trimmed;
+        return ` ${trimmed}`;
       }
-      
+
       return trimmed;
     });
 
     // 空文字列を除去して結合
-    return processed.filter(line => line !== '').join('');
+    return processed.filter((line) => line !== "").join("");
   }
 
   private joinContinuationBlock(lines: string[]): string {
-    if (lines.length === 0) return '';
+    if (lines.length === 0) return "";
     if (lines.length === 1) return lines[0];
 
     // 最初の行と継続行を結合
     const firstLine = lines[0];
-    const continuations = lines.slice(1).map(line => line.trim());
+    const continuations = lines.slice(1).map((line) => line.trim());
 
-    return firstLine + ' ' + continuations.join(' ');
+    return `${firstLine} ${continuations.join(" ")}`;
   }
 
   private isJsonObjectStart(line: string): boolean {
     const trimmed = line.trim();
     // JSONオブジェクトの開始パターン
-    return /^[{\[]/.test(trimmed) || 
-           /:\s*[{\[]/.test(trimmed) ||
-           /^\S+.*:\s*{/.test(trimmed);
+    return /^[{[]/.test(trimmed) || /:\s*[{[]/.test(trimmed) || /^\S+.*:\s*{/.test(trimmed);
   }
 
   private isJsonArrayStart(line: string): boolean {
@@ -182,7 +183,7 @@ export class MultilineProcessor {
 
   private isContinuationLine(line: string, prevLine: string): boolean {
     // インデントされた行を継続行とみなす
-    if (/^\s{2,}/.test(line) && prevLine.trim() !== '') {
+    if (/^\s{2,}/.test(line) && prevLine.trim() !== "") {
       // ただし、新しいログエントリの開始でない場合
       return !this.isNewLogEntry(line);
     }
@@ -194,12 +195,12 @@ export class MultilineProcessor {
     if (/^\s*\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(line)) {
       return true;
     }
-    
+
     // ログレベルで始まる行
     if (/^\s*(DEBUG|INFO|WARN|WARNING|ERROR|FATAL|TRACE)/i.test(line)) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -216,7 +217,7 @@ export class MultilineProcessor {
         continue;
       }
 
-      if (c === '\\') {
+      if (c === "\\") {
         escapeNext = true;
         continue;
       }

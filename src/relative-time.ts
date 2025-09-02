@@ -6,23 +6,23 @@
 export function toRelativeTime(timestamp: string): string {
   try {
     const date = new Date(timestamp);
-    if (isNaN(date.getTime())) {
-      return '';
+    if (Number.isNaN(date.getTime())) {
+      return "";
     }
-    
+
     const duration = (Date.now() - date.getTime()) / 1000; // 秒単位
-    
+
     // 未来の時刻の場合
     if (duration < 0) {
       const absDuration = Math.abs(duration);
       const { value } = getTimeUnit(absDuration);
       return `-${value}`;
     }
-    
+
     const { value } = getTimeUnit(duration);
     return value;
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -32,32 +32,36 @@ function getTimeUnit(duration: number): { unit: string; value: string } {
   const hours = Math.floor(duration / (60 * 60));
   const minutes = Math.floor(duration / 60);
   const seconds = duration;
-  
+
   // 365日以上は年と日
   if (days >= 365) {
     const remainingDays = days % 365;
-    return { unit: '', value: `${years}y${remainingDays}d` };
+    return { unit: "", value: `${years}y${remainingDays}d` };
   }
-  
+
   // 1日以上は日と時間
   if (days >= 1) {
     const remainingHours = Math.floor((duration % (24 * 60 * 60)) / (60 * 60));
-    return { unit: '', value: `${days}d${remainingHours}h` };
+    return { unit: "", value: `${days}d${remainingHours}h` };
   }
-  
+
   // 1時間以上は時間と分
   if (hours >= 1) {
     const remainingMinutes = Math.floor((duration % (60 * 60)) / 60);
-    return { unit: '', value: `${hours}h${remainingMinutes}m` };
+    // 分を2桁でパディング
+    const paddedMinutes = String(remainingMinutes).padStart(2, "0");
+    return { unit: "", value: `${hours}h${paddedMinutes}m` };
   }
-  
+
   // 1分以上は分と秒
   if (minutes >= 1) {
     const remainingSeconds = Math.floor(duration % 60);
-    return { unit: '', value: `${minutes}m${remainingSeconds}s` };
+    // 秒を2桁でパディング
+    const paddedSeconds = String(remainingSeconds).padStart(2, "0");
+    return { unit: "", value: `${minutes}m${paddedSeconds}s` };
   }
-  
+
   // 1分未満は秒表示（小数点第1位まで、常に.0を表示）
   const roundedSeconds = Math.floor(seconds * 10) / 10;
-  return { unit: '', value: `${roundedSeconds.toFixed(1)}s` };
+  return { unit: "", value: `${roundedSeconds.toFixed(1)}s` };
 }

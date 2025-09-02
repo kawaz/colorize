@@ -22,10 +22,10 @@ export class TimestampDeduplicator {
 
     // 行内のタイムスタンプをすべて検出
     const matches: Array<{ value: string; index: number; date: Date | null }> = [];
-    let match;
 
     this.timestampPattern.lastIndex = 0; // Reset regex state
-    while ((match = this.timestampPattern.exec(line)) !== null) {
+    let match = this.timestampPattern.exec(line);
+    while (match !== null) {
       const timestamp = match[0];
       const date = this.parseTimestamp(timestamp);
       matches.push({
@@ -33,6 +33,9 @@ export class TimestampDeduplicator {
         index: match.index,
         date,
       });
+
+      // 次のマッチを取得
+      match = this.timestampPattern.exec(line);
     }
 
     // タイムスタンプが2個以上ない場合はそのまま返す
@@ -48,7 +51,7 @@ export class TimestampDeduplicator {
     try {
       // ISO 8601形式のタイムスタンプをパース
       const date = new Date(timestamp);
-      if (isNaN(date.getTime())) {
+      if (Number.isNaN(date.getTime())) {
         return null;
       }
       return date;
@@ -73,9 +76,9 @@ export class TimestampDeduplicator {
       // 両方のタイムスタンプが有効な日付の場合
       if (current.date && next.date) {
         const gap = Math.abs(next.date.getTime() - current.date.getTime());
-        
+
         // 時間差が閾値以内で、かつ連続している場合
-        if (gap <= this.options.maxGapMs!) {
+        if (this.options.maxGapMs !== undefined && gap <= this.options.maxGapMs) {
           // 2つのタイムスタンプが近接している（空白のみで区切られている）場合
           const between = line.substring(current.index + current.value.length, next.index);
           if (/^\s*$/.test(between)) {
@@ -100,18 +103,18 @@ export class TimestampDeduplicator {
     // 後ろから削除していく（インデックスがずれないように）
     let result = line;
     const sortedIndices = Array.from(toRemove).sort((a, b) => b - a);
-    
+
     for (const idx of sortedIndices) {
       const match = matches[idx];
       const startIdx = match.index;
       const endIdx = match.index + match.value.length;
-      
+
       // タイムスタンプの後の空白も一緒に削除
       let deleteEnd = endIdx;
       while (deleteEnd < result.length && /\s/.test(result[deleteEnd])) {
         deleteEnd++;
       }
-      
+
       result = result.substring(0, startIdx) + result.substring(deleteEnd);
     }
 
@@ -121,19 +124,19 @@ export class TimestampDeduplicator {
   private isDataTimestamp(line: string, timestampIndex: number): boolean {
     // タイムスタンプの前後の文字を確認
     const beforeIndex = timestampIndex - 1;
-    const afterIndex = timestampIndex + this.timestampPattern.source.length;
+    const _afterIndex = timestampIndex + this.timestampPattern.source.length;
 
     // タイムスタンプの前の文字をチェック
     if (beforeIndex >= 0) {
       const charBefore = line[beforeIndex];
-      
+
       // JSONのキー値、配列、オブジェクト内のタイムスタンプ
-      if (charBefore === '"' || charBefore === ':' || charBefore === ',' || charBefore === '[' || charBefore === '{') {
+      if (charBefore === '"' || charBefore === ":" || charBefore === "," || charBefore === "[" || charBefore === "{") {
         return true;
       }
-      
+
       // キー=値 形式のデータ
-      if (charBefore === '=') {
+      if (charBefore === "=") {
         return true;
       }
 
@@ -142,7 +145,7 @@ export class TimestampDeduplicator {
       if (/[a-zA-Z_][a-zA-Z0-9_]*\s*[:=]\s*$/.test(contextBefore)) {
         return true; // キー名の後のタイムスタンプ
       }
-      
+
       // JSONライクな構造内
       if (/[{,]\s*"?[a-zA-Z_][a-zA-Z0-9_]*"?\s*:\s*"?$/.test(contextBefore)) {
         return true;
@@ -152,9 +155,9 @@ export class TimestampDeduplicator {
     // タイムスタンプの後の文字をチェック
     const searchEnd = Math.min(line.length, timestampIndex + 100);
     const afterContext = line.substring(timestampIndex, searchEnd);
-    
+
     // タイムスタンプの直後に引用符がある場合
-    if (afterContext.match(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z?"/) ) {
+    if (afterContext.match(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z?"/)) {
       return true;
     }
 
@@ -173,9 +176,9 @@ export class TimestampDeduplicator {
   }
 
   processLines(input: string): string {
-    const lines = input.split('\n');
-    const processedLines = lines.map(line => this.process(line));
-    return processedLines.join('\n');
+    const lines = input.split("\n");
+    const processedLines = lines.map((line) => this.process(line));
+    return processedLines.join("\n");
   }
 }
 

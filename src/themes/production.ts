@@ -1,13 +1,13 @@
-import chalk from 'chalk';
-import { Theme } from './types';
+import chalk from "chalk";
+import type { Theme } from "./types";
 
 // 本番用テーマ（見た目重視）
 export const productionTheme: Theme = {
-  name: 'production',
+  name: "production",
   colors: {
     timestamp: chalk.gray,
-    timestampSecondary: chalk.green,  // 文字列と同じ色
-    relativeTime: chalk.dim.cyan,  // 相対時間は薄いシアン
+    timestampSecondary: chalk.green, // 文字列と同じ色
+    relativeTime: chalk.dim.cyan, // 相対時間は薄いシアン
 
     // IPv4とIPv6を統一
     ipv4: chalk.magenta,

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noForEach": "off"
+      },
+      "style": {
+        "useConst": "error",
+        "useTemplate": "warn"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["src/**", "test/**", "colorize.ts", "*.json"]
+  }
+}

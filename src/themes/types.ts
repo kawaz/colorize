@@ -4,8 +4,8 @@ export interface Theme {
   colors: {
     // タイムスタンプ
     timestamp: (text: string) => string;
-    timestampSecondary: (text: string) => string;  // 2回目以降のタイムスタンプ
-    relativeTime: (text: string) => string;  // 相対時間表記
+    timestampSecondary: (text: string) => string; // 2回目以降のタイムスタンプ
+    relativeTime: (text: string) => string; // 相対時間表記
 
     // IPアドレス
     ipv4: (text: string) => string;

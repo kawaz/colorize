@@ -4,6 +4,9 @@ test/
 # Documentation samples
 docs/
 
+# Build output
+dist/
+
 # Node modules (if added later)
 node_modules/
 
