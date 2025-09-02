@@ -124,16 +124,19 @@ function parseArgsInto(args: string[], options: Options): void {
 
 function showVersion() {
   // シンプルなバージョン表示（一般的なツールと同様）
-  console.log(`${BUILD_INFO.name} version ${BUILD_INFO.version} (${BUILD_INFO.gitCommit})`);
+  const dirtyFlag = BUILD_INFO.gitDirty ? '-dirty' : '';
+  console.log(`${BUILD_INFO.name} version ${BUILD_INFO.version} (${BUILD_INFO.gitCommit}${dirtyFlag})`);
 }
 
 function showVersionVerbose() {
   // 詳細なバージョン情報
+  const dirtyFlag = BUILD_INFO.gitDirty ? ' (uncommitted changes)' : '';
   console.log(`${chalk.bold(BUILD_INFO.name)}`);
-  console.log(`  Version:    ${BUILD_INFO.version}`);
-  console.log(`  Commit:     ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})`);
-  console.log(`  Build date: ${BUILD_INFO.buildDate}`);
-  console.log(`  Built with: Bun v${BUILD_INFO.bunVersion}`);
+  console.log(`  Version:     ${BUILD_INFO.version}`);
+  console.log(`  Commit:      ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})${dirtyFlag}`);
+  console.log(`  Commit date: ${BUILD_INFO.gitCommitDate}`);
+  console.log(`  Build date:  ${BUILD_INFO.buildDate}`);
+  console.log(`  Built with:  Bun v${BUILD_INFO.bunVersion}`);
 }
 
 function showHelp() {

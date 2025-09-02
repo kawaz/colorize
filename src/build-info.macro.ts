@@ -12,24 +12,29 @@ export function getBuildInfo() {
   let gitCommit = "unknown";
   let gitBranch = "unknown";
   let gitDirty = false;
+  let gitCommitDate = "unknown";
   
   try {
     gitCommit = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
     gitBranch = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8" }).trim();
     const gitStatus = execSync("git status --porcelain", { encoding: "utf-8" });
     gitDirty = gitStatus.length > 0;
+    // コミット日時を取得（ISO形式）
+    gitCommitDate = execSync("git show -s --format=%cI HEAD", { encoding: "utf-8" }).trim();
   } catch (e) {
     // Git情報が取得できない場合は無視
   }
 
-  const buildDate = new Date().toISOString().replace('T', ' ').split('.')[0] + ' UTC';
+  const buildDate = new Date().toISOString();
 
   return {
     version: packageJson.version,
     name: packageJson.name,
     description: packageJson.description,
-    gitCommit: gitDirty ? `${gitCommit}-dirty` : gitCommit,
+    gitCommit,
     gitBranch,
+    gitDirty,
+    gitCommitDate,
     buildDate,
     bunVersion: process.versions.bun || "unknown",
   };
