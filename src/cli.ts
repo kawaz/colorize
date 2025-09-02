@@ -1,12 +1,16 @@
 #!/usr/bin/env bun
 
 import chalk from "chalk";
+import { getBuildInfo } from "./build-info.macro" with { type: "macro" };
 import { LogLexer } from "./lexer";
 import { processMultiline } from "./multiline";
 import { logParser } from "./parser";
 import { themeInfo } from "./theme";
 import { deduplicateTimestamps } from "./timestamp-dedup";
 import { createColorizeVisitor } from "./visitor";
+
+// ビルド時に情報を埋め込む
+const BUILD_INFO = getBuildInfo();
 
 // デフォルトで色出力を有効化（パイプ経由でも色を出力）
 // main関数内でオプションに応じて上書きされる
@@ -21,6 +25,7 @@ export interface Options {
   lineBuffered: boolean;
   forceColor: boolean;
   help: boolean;
+  version: boolean;
   theme?: string;
 }
 
@@ -32,6 +37,7 @@ export function parseArgs(args: string[]): Options {
     lineBuffered: true, // デフォルトで有効
     forceColor: false,
     help: false,
+    version: false,
   };
 
   // 環境変数からオプションを読み込み
@@ -108,13 +114,24 @@ function parseArgsInto(args: string[], options: Options): void {
       case "-h":
         options.help = true;
         break;
+      case "--version":
+      case "-V":
+        options.version = true;
+        break;
     }
   }
 }
 
+function showVersion() {
+  console.log(`${chalk.bold(BUILD_INFO.name)} v${BUILD_INFO.version}`);
+  console.log(`  Git: ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})`);
+  console.log(`  Built: ${BUILD_INFO.buildDate}`);
+  console.log(`  Bun: v${BUILD_INFO.bunVersion}`);
+}
+
 function showHelp() {
   console.log(`
-${chalk.bold("colorize")} - Log colorization tool
+${chalk.bold(BUILD_INFO.name)} v${BUILD_INFO.version} - ${BUILD_INFO.description}
 
 ${chalk.bold("Usage:")}
   cat app.log | colorize [options]
@@ -128,6 +145,7 @@ ${chalk.bold("Options:")}
   -c, --force-color          Force color output even when piped or redirected
   -t, --theme <name>         Color theme (use -t without name to list themes)
   -h, --help                 Show this help message
+  -V, --version              Show version information
 
 ${chalk.bold("Environment Variables:")}
   COLORIZE_OPTIONS   Set default options (e.g., export COLORIZE_OPTIONS="-r -t github")
@@ -163,6 +181,11 @@ async function main() {
 
   if (options.help) {
     showHelp();
+    process.exit(0);
+  }
+
+  if (options.version) {
+    showVersion();
     process.exit(0);
   }
 
