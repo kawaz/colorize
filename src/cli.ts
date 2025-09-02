@@ -123,9 +123,16 @@ function parseArgsInto(args: string[], options: Options): void {
 }
 
 function showVersion() {
-  console.log(`${chalk.bold(BUILD_INFO.name)} v${BUILD_INFO.version}`);
-  console.log(`  Commit: ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})`);
-  console.log(`  Built: ${BUILD_INFO.buildDate}`);
+  // シンプルなバージョン表示（一般的なツールと同様）
+  console.log(`${BUILD_INFO.name} version ${BUILD_INFO.version} (${BUILD_INFO.gitCommit})`);
+}
+
+function showVersionVerbose() {
+  // 詳細なバージョン情報
+  console.log(`${chalk.bold(BUILD_INFO.name)}`);
+  console.log(`  Version:    ${BUILD_INFO.version}`);
+  console.log(`  Commit:     ${BUILD_INFO.gitCommit} (${BUILD_INFO.gitBranch})`);
+  console.log(`  Build date: ${BUILD_INFO.buildDate}`);
   console.log(`  Built with: Bun v${BUILD_INFO.bunVersion}`);
 }
 

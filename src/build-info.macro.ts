@@ -22,7 +22,7 @@ export function getBuildInfo() {
     // Git情報が取得できない場合は無視
   }
 
-  const buildDate = new Date().toISOString();
+  const buildDate = new Date().toISOString().replace('T', ' ').split('.')[0] + ' UTC';
 
   return {
     version: packageJson.version,
