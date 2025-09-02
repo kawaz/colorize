@@ -16,7 +16,6 @@ if (!process.env.FORCE_COLOR) {
 
 interface Options {
   joinMultiline: boolean;
-  preserveIndent: boolean;
   deduplicateTimestamps: boolean;
   relativeTime: boolean;
   lineBuffered: boolean;
@@ -29,7 +28,6 @@ interface Options {
 function parseArgs(args: string[]): Options {
   const options: Options = {
     joinMultiline: false,
-    preserveIndent: true,
     deduplicateTimestamps: true,
     relativeTime: false,
     lineBuffered: true, // デフォルトで有効
@@ -62,12 +60,6 @@ function parseArgsInto(args: string[], options: Options): void {
         break;
       case "--no-join-multiline":
         options.joinMultiline = false;
-        break;
-      case "--preserve-indent":
-        options.preserveIndent = true;
-        break;
-      case "--no-preserve-indent":
-        options.preserveIndent = false;
         break;
       case "--dedup-timestamps":
         options.deduplicateTimestamps = true;
@@ -137,7 +129,6 @@ ${chalk.bold("Usage:")}
 
 ${chalk.bold("Options:")}
   -j, --join-multiline       Join multiline log entries (disables line buffering)
-  --no-preserve-indent       Don't preserve indentation when joining
   --no-dedup-timestamps      Don't remove duplicate timestamps (e.g., kubectl --timestamps)
   -r, --relative-time        Show relative time next to timestamps (e.g., 2.5h)
   --no-line-buffered         Disable line buffering for batch processing
@@ -263,7 +254,6 @@ async function main() {
       // マルチライン処理
       processed = processMultiline(processed, {
         joinMultiline: options.joinMultiline,
-        preserveIndent: options.preserveIndent,
       });
 
       // 行ごとに処理

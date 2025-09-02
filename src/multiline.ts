@@ -1,6 +1,5 @@
 export interface MultilineOptions {
   joinMultiline: boolean;
-  preserveIndent: boolean;
 }
 
 export class MultilineProcessor {
@@ -9,7 +8,6 @@ export class MultilineProcessor {
   constructor(options: Partial<MultilineOptions> = {}) {
     this.options = {
       joinMultiline: true,
-      preserveIndent: true,
       ...options,
     };
   }
@@ -146,11 +144,10 @@ export class MultilineProcessor {
       const trimmed = line.trim();
       if (trimmed === "") return "";
 
-      // コンマで終わる行はそのまま、それ以外はスペースを追加
-      if (this.options.preserveIndent && index > 0) {
+      // インデント後の内容にスペースを追加して結合
+      if (index > 0) {
         return ` ${trimmed}`;
       }
-
       return trimmed;
     });
 

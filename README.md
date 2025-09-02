@@ -77,7 +77,6 @@ colorize [options]
 
 Options:
   -j, --join-multiline       Join multiline log entries (disables line buffering)
-  --no-preserve-indent       Don't preserve indentation when joining
   --no-dedup-timestamps      Don't remove duplicate timestamps (e.g., kubectl --timestamps)
   -r, --relative-time        Show relative time between log entries
   --no-line-buffered         Process entire input at once (batch mode)
