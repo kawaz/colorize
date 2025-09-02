@@ -1,6 +1,9 @@
 name: Publish to npm
 
 on:
+  push:
+    tags:
+      - 'v*'  # v0.1.0, v1.0.0などのタグがpushされたら自動実行
   release:
     types: [published]
   workflow_dispatch:
