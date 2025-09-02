@@ -118,7 +118,6 @@ ${chalk.bold("colorize")} - Log colorization tool
 
 ${chalk.bold("Usage:")}
   cat logfile.txt | colorize [options]
-  colorize < logfile.txt [options]
   tail -f app.log | colorize [options]
 
 ${chalk.bold("Options:")}
