@@ -5,9 +5,10 @@
   "type": "module",
   "main": "./dist/colorize.js",
   "bin": {
-    "colorize": "./dist/colorize.js"
+    "colorize": "./bin/colorize"
   },
   "files": [
+    "bin/",
     "dist/",
     "LICENSE",
     "README.md"
@@ -16,7 +17,7 @@
     "dev": "bun run bin/colorize",
     "test": "bun test",
     "lint": "bunx biome check . --write",
-    "build": "bun build src/cli.ts --outfile=dist/colorize.js --target=node --minify && node scripts/fix-shebang.js",
+    "build": "bun build src/cli.ts --outfile=dist/colorize.js --target=node --minify",
     "prepublishOnly": "bun run lint && bun run test && bun run build",
     "release": "bun run release:patch",
     "release:patch": "bun run prepublishOnly && npm version patch && git push && git push --tags",

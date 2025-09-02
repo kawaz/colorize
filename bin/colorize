@@ -1,2 +1,3 @@
-#!/usr/bin/env bun
-import "../src/cli.ts";
+#!/bin/sh
+":" //# comment; exec "$(command -v bun || command -v node)" "$0" "$@"
+import "../dist/colorize.js";
