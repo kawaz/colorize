@@ -17,7 +17,11 @@
     "test": "bun test",
     "lint": "bunx biome check . --write",
     "build": "bun build colorize.ts --outdir=dist --target=bun --minify",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "release": "bun run release:patch",
+    "release:patch": "npm version patch && git push && git push --tags",
+    "release:minor": "npm version minor && git push && git push --tags",
+    "release:major": "npm version major && git push && git push --tags"
   },
   "keywords": [
     "log",
