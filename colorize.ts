@@ -133,17 +133,9 @@ ${chalk.bold("Options:")}
   -r, --relative-time        Show relative time next to timestamps (e.g., 2.5h)
   --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piped or redirected
-  -t, --theme <name>         Color theme (see below for available themes)
+  -t, --theme <name>         Color theme (use -t without name to list themes)
   -v, --verbose              Show debug information
   -h, --help                 Show this help message
-
-${chalk.bold("Available themes:")}
-${Object.entries(themeInfo)
-  .map(([name, description]) => {
-    const paddedName = name.padEnd(15);
-    return `  ${chalk.gray("•")} ${chalk.gray(paddedName)} - ${description}`;
-  })
-  .join("\n")}
 
 ${chalk.bold("Examples:")}
   ${chalk.gray("# Basic usage")}

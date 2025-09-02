@@ -81,7 +81,7 @@ Options:
   -r, --relative-time        Show relative time between log entries
   --line-buffered            Enable line buffering for real-time output (default: ON)
   -c, --force-color          Force color output even when piping
-  -t, --theme <name>         Select color theme (default: production)
+  -t, --theme <name>         Select color theme (use -t without name to list)
   -v, --verbose              Show debug information
   -h, --help                 Show help message
 ```
