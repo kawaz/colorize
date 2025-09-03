@@ -1,0 +1,13 @@
+2024-03-15T14:30:45.123Z INFO Application started successfully
+2024-03-15T14:30:46.456Z DEBUG Loading configuration from /etc/app.conf
+2024-03-15T14:30:47.789Z WARN Memory usage is high: 85%
+2024-03-15T14:30:48.012Z ERROR Failed to connect to database at 192.168.1.100:5432
+GET /api/users 200
+POST /api/login 401
+DELETE /api/user/123 500
+https://example.com/api/docs
+true false null undefined
+"This is a quoted string" 'Another string'
+[src/app.js:42:8] Error occurred here
+(main.ts:100:15) TypeScript error
+123 456.789 -42 0.001

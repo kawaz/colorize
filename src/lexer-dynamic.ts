@@ -1,12 +1,12 @@
-import { createToken, type IToken, Lexer, type TokenType } from "chevrotain";
+import { createToken, Lexer, type TokenType } from "chevrotain";
 import type { TokenDefinition } from "./rule-engine";
 import type { TokenConfig, TokenWithSubTokens } from "./types";
 
 export class DynamicLexer {
-  private tokens = new Map<string, IToken>();
-  private tokenList: IToken[] = [];
+  private tokens = new Map<string, TokenType>();
+  private tokenList: TokenType[] = [];
   private lexer: Lexer | null = null;
-  private categoryMap = new Map<string, IToken>();
+  private categoryMap = new Map<string, TokenType>();
 
   constructor(private definitions: TokenDefinition[]) {
     this.buildTokens();
@@ -35,7 +35,7 @@ export class DynamicLexer {
     // 次に実際のトークンを作成
     for (const def of this.definitions) {
       if (def.pattern) {
-        const categories: IToken[] = [];
+        const categories: TokenType[] = [];
 
         // カテゴリを設定
         if (def.categories) {
@@ -78,7 +78,7 @@ export class DynamicLexer {
     }
 
     // 重複を削除（カテゴリトークンが重複して追加される可能性があるため）
-    const uniqueTokens = new Map<string, IToken>();
+    const uniqueTokens = new Map<string, TokenType>();
     for (const token of this.tokenList) {
       if (!uniqueTokens.has(token.name)) {
         uniqueTokens.set(token.name, token);
@@ -145,21 +145,21 @@ export class DynamicLexer {
   /**
    * トークンを取得
    */
-  getToken(name: string): IToken | undefined {
+  getToken(name: string): TokenType | undefined {
     return this.tokens.get(name);
   }
 
   /**
    * 全トークンを取得
    */
-  getAllTokens(): IToken[] {
+  getAllTokens(): TokenType[] {
     return [...this.tokenList];
   }
 
   /**
    * トークンマップを取得
    */
-  getTokenMap(): Map<string, IToken> {
+  getTokenMap(): Map<string, TokenType> {
     return new Map(this.tokens);
   }
 }
