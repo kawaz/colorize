@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
 import { homedir } from "node:os";
+import * as path from "node:path";
 import type { TokenValue } from "./rule-engine";
 import type { Theme } from "./theme-resolver";
 
@@ -27,7 +27,7 @@ export class UserConfigLoader {
       if (fs.existsSync(configPath)) {
         try {
           console.error(`Loading user config from ${configPath}`);
-          
+
           if (configPath.endsWith(".json")) {
             // JSON設定ファイル
             const content = fs.readFileSync(configPath, "utf-8");
@@ -42,7 +42,7 @@ export class UserConfigLoader {
         }
       }
     }
-    
+
     return null;
   }
 
@@ -71,7 +71,7 @@ export class UserConfigLoader {
    */
   mergeConfigs(
     baseConfig: { tokens: Record<string, TokenValue>; theme: Theme },
-    userConfig: UserConfig | null
+    userConfig: UserConfig | null,
   ): { tokens: Record<string, TokenValue>; theme: Theme; parentTheme?: string } {
     if (!userConfig) {
       return baseConfig;

@@ -47,7 +47,7 @@ export class Visitor {
           subTokens,
           (key) => this.options.theme.getTheme(key),
           (text, theme) => this.applyTheme(text, theme),
-          tokenType
+          tokenType,
         );
       }
     }

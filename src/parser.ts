@@ -1,4 +1,4 @@
-import { CstParser, type IToken, type TokenType } from "chevrotain";
+import { CstParser, type TokenType } from "chevrotain";
 import type { DynamicLexer } from "./lexer-dynamic";
 import type { ParseAlternative } from "./types";
 

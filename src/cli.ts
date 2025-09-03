@@ -8,11 +8,11 @@ import { version } from "../package.json";
 import { DynamicLexer } from "./lexer-dynamic";
 import { Parser } from "./parser";
 import { RuleEngine } from "./rule-engine";
-import { config as basicConfig } from "./rules-basic";
 import { config as complexConfig } from "./rules";
+import { config as basicConfig } from "./rules-basic";
 import { ThemeResolver } from "./theme-resolver";
-import { Visitor } from "./visitor";
 import { UserConfigLoader } from "./user-config-loader";
+import { Visitor } from "./visitor";
 
 // デフォルトで色出力を有効化
 if (!process.env.FORCE_COLOR) {
@@ -54,7 +54,7 @@ class RuleBasedColorizeCli {
     if (!this.options.noUserConfig) {
       const userConfigLoader = new UserConfigLoader();
       const userConfig = await userConfigLoader.loadUserConfig();
-      
+
       if (userConfig) {
         ruleConfig = userConfigLoader.mergeConfigs(ruleConfig, userConfig);
         if (this.options.verbose) {
@@ -69,7 +69,12 @@ class RuleBasedColorizeCli {
 
     if (this.options.verbose) {
       console.error(`トークン定義数: ${tokenDefinitions.length}`);
-      console.error(`トークン: ${tokenDefinitions.slice(0, 5).map(d => d.name).join(", ")}...`);
+      console.error(
+        `トークン: ${tokenDefinitions
+          .slice(0, 5)
+          .map((d) => d.name)
+          .join(", ")}...`,
+      );
     }
 
     // レクサーを初期化
@@ -111,7 +116,7 @@ class RuleBasedColorizeCli {
       if (this.options.deduplicateTimestamps && previousLine) {
         const prevTimestamp = previousLine.match(timestampRegex)?.[0];
         const currTimestamp = line.match(timestampRegex)?.[0];
-        
+
         if (prevTimestamp && currTimestamp && prevTimestamp === currTimestamp) {
           // 同じタイムスタンプの場合、現在行のタイムスタンプを空白で置き換え
           outputLine = line.replace(timestampRegex, " ".repeat(currTimestamp.length));
@@ -191,12 +196,12 @@ class RuleBasedColorizeCli {
    */
   async upgrade(): Promise<void> {
     console.log("Checking for updates...");
-    
+
     try {
       // 最新バージョンを確認
       const result = execSync("npm view colorize version", { encoding: "utf-8" });
       const latestVersion = result.trim();
-      
+
       if (latestVersion === version) {
         console.log(`Already using the latest version (${version})`);
         return;
@@ -251,7 +256,7 @@ async function main() {
         const loader = new UserConfigLoader();
         console.log(loader.generateSampleConfig());
         console.error("\nSave this to one of these locations:");
-        loader.getConfigPaths().forEach(p => console.error(`  - ${p}`));
+        loader.getConfigPaths().forEach((p) => console.error(`  - ${p}`));
         process.exit(0);
       }
 

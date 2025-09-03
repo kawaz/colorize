@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { DynamicLexer } from "../src/lexer-dynamic";
 import { Parser } from "../src/parser";
-import { RuleEngine } from "../src/rule-engine";
-import { ThemeResolver } from "../src/theme-resolver";
 import type { TokenValue } from "../src/rule-engine";
+import { RuleEngine } from "../src/rule-engine";
 import type { Theme } from "../src/theme-resolver";
+import { ThemeResolver } from "../src/theme-resolver";
 import { Visitor } from "../src/visitor";
 
 // Force chalk to use colors in test environment
@@ -93,7 +93,7 @@ describe("Named Capture Groups", () => {
   it("should handle multiple named capture groups", () => {
     const { parser, visitor } = createVisitor(
       {
-        httpLog: /(?<method>GET|POST|PUT|DELETE) (?<path>\/[\w\/]*) (?<status>\d{3})/,
+        httpLog: /(?<method>GET|POST|PUT|DELETE) (?<path>\/[\w/]*) (?<status>\d{3})/,
       },
       {
         httpLog_method: "yellow|bold",

@@ -1,6 +1,6 @@
 import type { ThemeValue } from "./types";
 
-export { type ThemeValue };
+export type { ThemeValue };
 export type Theme = Record<string, ThemeValue>;
 
 export interface ThemeConfig {

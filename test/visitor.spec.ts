@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { DynamicLexer } from "../src/lexer-dynamic";
 import { Parser } from "../src/parser";
-import { RuleEngine } from "../src/rule-engine";
-import { ThemeResolver } from "../src/theme-resolver";
 import type { TokenValue } from "../src/rule-engine";
+import { RuleEngine } from "../src/rule-engine";
 import type { Theme } from "../src/theme-resolver";
+import { ThemeResolver } from "../src/theme-resolver";
 import type { TokenContext } from "../src/types";
 import { Visitor } from "../src/visitor";
 
