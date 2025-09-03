@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { DynamicLexer } from "../src/lexer-dynamic";
-import { SimpleParser } from "../src/parser-simple";
+import { Parser } from "../src/parser";
 import { RuleEngine } from "../src/rule-engine";
 import { ThemeResolver } from "../src/theme-resolver";
 import type { TokenValue } from "../src/rule-engine";
 import type { Theme } from "../src/theme-resolver";
-import { SimpleVisitor } from "../src/visitor-simple";
+import { Visitor } from "../src/visitor";
 
 // Force chalk to use colors in test environment
 beforeAll(() => {
@@ -17,10 +17,10 @@ describe("Named Capture Groups", () => {
     const engine = new RuleEngine({ tokens });
     const definitions = engine.buildTokenDefinitions();
     const lexer = new DynamicLexer(definitions);
-    const parser = new SimpleParser(lexer);
+    const parser = new Parser(lexer);
     const themeResolver = new ThemeResolver();
     const resolvedTheme = themeResolver.resolveTheme({ parentTheme: "none", theme });
-    return { parser, visitor: new SimpleVisitor(parser, { theme: resolvedTheme }) };
+    return { parser, visitor: new Visitor(parser, { theme: resolvedTheme }) };
   };
 
   it("should colorize sub-tokens from named capture groups", () => {

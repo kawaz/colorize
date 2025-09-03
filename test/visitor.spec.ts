@@ -1,115 +1,146 @@
-import { describe, expect, it } from "bun:test";
-import { LogLexer } from "../src/lexer";
-import { logParser } from "../src/parser";
-import { createColorizeVisitor } from "../src/visitor";
+import { beforeAll, describe, expect, it } from "bun:test";
+import { DynamicLexer } from "../src/lexer-dynamic";
+import { Parser } from "../src/parser";
+import { RuleEngine } from "../src/rule-engine";
+import { ThemeResolver } from "../src/theme-resolver";
+import type { TokenValue } from "../src/rule-engine";
+import type { Theme } from "../src/theme-resolver";
+import type { TokenContext } from "../src/types";
+import { Visitor } from "../src/visitor";
+
+// Force chalk to use colors in test environment
+beforeAll(() => {
+  process.env.FORCE_COLOR = "1";
+});
 
 describe("Visitor", () => {
-  function colorize(input: string, options = {}) {
-    const lexResult = LogLexer.tokenize(input);
-    logParser.input = lexResult.tokens;
-    const cst = logParser.logContent();
-    const visitor = createColorizeVisitor({ ...options, theme: "test" });
-    return visitor.visit(cst);
-  }
+  const createVisitor = (tokens: Record<string, TokenValue>, theme: Theme) => {
+    const engine = new RuleEngine({ tokens });
+    const definitions = engine.buildTokenDefinitions();
+    const lexer = new DynamicLexer(definitions);
+    const parser = new Parser(lexer);
+    const themeResolver = new ThemeResolver();
+    const resolvedTheme = themeResolver.resolveTheme({ parentTheme: "none", theme });
+    return { parser, visitor: new Visitor(parser, { theme: resolvedTheme }) };
+  };
 
-  function stripAnsi(str: string): string {
-    // ANSIエスケープコードを除去
-    // ESC文字を使った正規表現を構築
-    const ESC = "\x1b";
-    const ansiRegex = new RegExp(`${ESC}\\[[0-9;]*m`, "g");
-    return str.replace(ansiRegex, "");
-  }
+  describe("processTokens", () => {
+    it("should apply simple color themes", () => {
+      const { parser, visitor } = createVisitor(
+        {
+          word: /[a-zA-Z]+/,
+          number: /\d+/,
+          space: /\s+/,
+        },
+        {
+          word: "red",
+          number: "yellow",
+          space: "",
+        },
+      );
 
-  describe("Token Identification", () => {
-    it("should mark timestamps correctly", () => {
-      const result = colorize("2025-09-01T12:00:00.000Z");
-      expect(stripAnsi(result)).toContain("[TIMESTAMP]");
-      expect(stripAnsi(result)).toContain("[/TIMESTAMP]");
+      const parseResult = parser.parseLine("hello 123 world");
+      const output = visitor.processTokens(parseResult.tokens);
+
+      // ANSI color codes should be present
+      expect(output).toContain("\x1b[31m"); // red
+      expect(output).toContain("\x1b[33m"); // yellow
+      expect(output).toContain("hello");
+      expect(output).toContain("123");
+      expect(output).toContain("world");
     });
 
-    it("should mark IP addresses correctly", () => {
-      const ipv4 = colorize("192.168.1.1");
-      expect(stripAnsi(ipv4)).toContain("[IPV4]");
-      expect(stripAnsi(ipv4)).toContain("[/IPV4]");
+    it("should handle theme functions", () => {
+      const { parser, visitor } = createVisitor(
+        {
+          level: /INFO|ERROR|WARN/,
+        },
+        {
+          level: (ctx: TokenContext) => {
+            if (ctx.value === "ERROR") return "red";
+            if (ctx.value === "WARN") return "yellow";
+            return "green";
+          },
+        },
+      );
 
-      const ipv6 = colorize("2001:db8::1");
-      expect(stripAnsi(ipv6)).toContain("[IPV6]");
-      expect(stripAnsi(ipv6)).toContain("[/IPV6]");
+      const parseResult = parser.parseLine("ERROR");
+      const output = visitor.processTokens(parseResult.tokens);
+
+      expect(output).toContain("\x1b[31m"); // red
+      expect(output).toContain("ERROR");
     });
 
-    it("should mark log levels correctly", () => {
-      const levels = ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
-      for (const level of levels) {
-        const result = colorize(`[${level}]`);
-        const marker = `[${level === "WARN" ? "WARN" : level}]`;
-        expect(stripAnsi(result)).toContain(marker);
-      }
+    it("should handle shorthand themes with pipes", () => {
+      const { parser, visitor } = createVisitor(
+        {
+          important: /IMPORTANT/,
+        },
+        {
+          important: "red|bold",
+        },
+      );
+
+      const parseResult = parser.parseLine("IMPORTANT");
+      const output = visitor.processTokens(parseResult.tokens);
+
+      expect(output).toContain("\x1b[31m"); // red
+      expect(output).toContain("\x1b[1m"); // bold
+      expect(output).toContain("IMPORTANT");
     });
 
-    it("should mark data types correctly", () => {
-      const number = colorize("123");
-      expect(stripAnsi(number)).toContain("[NUM]");
+    it("should handle hex colors", () => {
+      const { parser, visitor } = createVisitor(
+        {
+          hex: /HEX/,
+        },
+        {
+          hex: "#ff0000", // red in hex
+        },
+      );
 
-      const boolean = colorize("true");
-      expect(stripAnsi(boolean)).toContain("[BOOL]");
+      const parseResult = parser.parseLine("HEX");
+      const output = visitor.processTokens(parseResult.tokens);
 
-      const nullVal = colorize("null");
-      expect(stripAnsi(nullVal)).toContain("[NULL]");
-
-      const string = colorize('"hello"');
-      expect(stripAnsi(string)).toContain("[STR]");
+      expect(output).toContain("\x1b[38;2;255;0;0m"); // RGB color
+      expect(output).toContain("HEX");
     });
 
-    it("should mark key-value pairs correctly", () => {
-      const result = colorize("key: value");
-      expect(stripAnsi(result)).toContain("[KEY]");
-      // コロンはsymbolとして扱われる
-      expect(stripAnsi(result)).toContain("[TXT]:[/TXT]");
+    it("should handle style objects", () => {
+      const { parser, visitor } = createVisitor(
+        {
+          styled: /STYLED/,
+        },
+        {
+          styled: {
+            color: "blue",
+            fontWeight: "bold",
+            textDecoration: "underline",
+          },
+        },
+      );
+
+      const parseResult = parser.parseLine("STYLED");
+      const output = visitor.processTokens(parseResult.tokens);
+
+      expect(output).toContain("\x1b[34m"); // blue
+      expect(output).toContain("\x1b[1m"); // bold
+      expect(output).toContain("\x1b[4m"); // underline
+      expect(output).toContain("STYLED");
     });
 
-    it("should mark URLs correctly", () => {
-      const result = colorize("https://example.com");
-      expect(stripAnsi(result)).toContain("[URL]");
-      expect(stripAnsi(result)).toContain("[/URL]");
-    });
+    it("should leave unthemed tokens unchanged", () => {
+      const { parser, visitor } = createVisitor(
+        {
+          word: /[a-zA-Z]+/,
+        },
+        {}, // no theme
+      );
 
-    it("should mark HTTP elements correctly", () => {
-      const method = colorize("GET");
-      expect(stripAnsi(method)).toContain("[METHOD]");
+      const parseResult = parser.parseLine("hello");
+      const output = visitor.processTokens(parseResult.tokens);
 
-      // 単独の数字はNumberLiteralとして認識される
-      const status200 = colorize("200");
-      expect(stripAnsi(status200)).toContain("[NUM]");
-
-      const status404 = colorize("404");
-      expect(stripAnsi(status404)).toContain("[NUM]");
-    });
-  });
-
-  describe("Relative Time", () => {
-    it("should add relative time when option is enabled", () => {
-      const result = colorize("2025-09-01T12:00:00.000Z", { showRelativeTime: true });
-      expect(stripAnsi(result)).toContain("[RELTIME]");
-    });
-
-    it("should not add relative time when option is disabled", () => {
-      const result = colorize("2025-09-01T12:00:00.000Z", { showRelativeTime: false });
-      expect(stripAnsi(result)).not.toContain("[RELTIME]");
-    });
-  });
-
-  describe("Complex Log Lines", () => {
-    it("should handle mixed content correctly", () => {
-      const input =
-        "2025-09-01T12:00:00.000Z [INFO] User 192.168.1.1 accessed https://api.example.com/users status: 200";
-      const result = colorize(input);
-      const stripped = stripAnsi(result);
-
-      expect(stripped).toContain("[TIMESTAMP]");
-      expect(stripped).toContain("[INFO]");
-      expect(stripped).toContain("[IPV4]");
-      expect(stripped).toContain("[URL]");
-      expect(stripped).toContain("[NUM]200[/NUM]");
+      expect(output).toBe("hello");
     });
   });
 });

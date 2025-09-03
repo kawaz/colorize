@@ -1,16 +1,16 @@
-# colorize
+# @kawaz/colorize
 
-A powerful log colorization tool built with Chevrotain parser for beautiful and readable log output.
+A powerful rule-based log colorization tool with customizable token definitions and themes.
 
 ## Features
 
-- **Smart Log Parsing**: Automatically detects and highlights timestamps, log levels, IP addresses, URLs, HTTP methods/status codes, and more
-- **Multiple Themes**: Choose from various color themes (github, monokai, dracula, nord, solarized-dark, tokyo-night, production, test)
-- **Multiline Support**: Intelligently joins multiline log entries like stack traces and JSON objects
-- **Relative Time**: Shows elapsed time between log entries for performance analysis
+- **Rule-based Tokenization**: Define tokens using regular expressions in a declarative way
+- **Named Capture Groups**: Fine-grained colorization of complex patterns
+- **Customizable Themes**: Built-in themes (default, none, monokai) and user-defined color schemes
+- **User Configuration**: Extend with custom tokens and themes via config files
+- **Smart Log Parsing**: Automatically detects timestamps, log levels, IP addresses, URLs, HTTP methods/status codes, and more
 - **Timestamp Deduplication**: Removes duplicate timestamps from kubectl logs and similar tools
-- **Line Buffering**: Real-time colorization for streaming logs (tail -f, kubectl logs -f)
-- **Fast Performance**: Built with Bun for blazing fast processing
+- **Fast Performance**: Built with Bun and Chevrotain for blazing fast processing
 
 ## Installation
 
@@ -73,16 +73,23 @@ tail -f app.log | bunx @kawaz/colorize -t github
 ### Options
 
 ```bash
-colorize [options]
+colorize [options] [file]
 
 Options:
-  -j, --join-multiline       Join multiline log entries (disables line buffering)
-  --dedup-timestamps         Remove duplicate timestamps (e.g., kubectl --timestamps)
-  -r, --relative-time        Show relative time between log entries
-  --line-buffered            Enable line buffering for real-time output (default: ON)
-  -c, --force-color          Force color output even when piping
-  -t, --theme <name>         Select color theme (use -t without name to list)
-  -h, --help                 Show help message
+  -V, --version               output the version number
+  -t, --theme <theme>         color theme to use (default, none, monokai)
+  -d, --debug                 enable debug output
+  --list-themes               list available themes
+  -m, --join-multiline        join multiline logs
+  --deduplicate-timestamps    remove duplicate timestamps
+  -r, --relative-time         show relative timestamps
+  --force-color               force color output
+  --simple                    use simple rules instead of complex
+  -v, --verbose               verbose output
+  --no-user-config            ignore user configuration file
+  --generate-config           generate sample configuration file
+  --upgrade                   upgrade to the latest version
+  -h, --help                  display help for command
 ```
 
 ### Examples
@@ -119,20 +126,73 @@ export FORCE_COLOR=1
 
 ## Themes
 
-Available themes:
-- **production** (default): High contrast, optimized for terminals
-- **github**: Clean, GitHub-inspired colors
-- **github-dark**: Dark version of GitHub theme
-- **monokai**: Classic Monokai colors
-- **dracula**: Popular Dracula theme
-- **nord**: Arctic-inspired Nord palette
-- **solarized-dark**: Solarized dark variant
-- **tokyo-night**: Modern Tokyo Night theme
-- **test**: High contrast for testing
+Available built-in themes:
+- **default**: Balanced colors for readability
+- **none**: No colors (plain text)
+- **monokai**: Monokai-inspired color scheme
 
 List available themes:
 ```bash
-colorize --theme
+colorize --list-themes
+```
+
+## User Configuration
+
+### Creating a Configuration File
+
+Generate a sample configuration:
+```bash
+colorize --generate-config > ~/.config/colorize/config.ts
+```
+
+### Configuration Example
+
+```typescript
+import type { UserConfig } from "colorize";
+
+const config: UserConfig = {
+  // Base theme
+  parentTheme: "default",
+
+  // Custom token definitions
+  tokens: {
+    // Simple pattern
+    myKeyword: /\b(TODO|FIXME|NOTE)\b/,
+    
+    // Named capture groups for sub-tokens
+    gitCommit: /(?<hash>[a-f0-9]{7,40})\s+(?<message>.+)/,
+    
+    // Multiple patterns
+    customError: [
+      /\bERR_[A-Z_]+\b/,
+      /\bE[0-9]{4}\b/,
+    ],
+  },
+
+  // Custom theme settings
+  theme: {
+    // Color for custom tokens
+    myKeyword: "magenta|bold",
+    
+    // Colors for sub-tokens
+    gitCommit_hash: "yellow",
+    gitCommit_message: "white",
+    
+    // Override built-in colors
+    string: "green",
+    number: "#ff9900",
+    
+    // Dynamic coloring with functions
+    customError: (ctx) => {
+      if (ctx.value.startsWith("ERR_")) {
+        return "red|bold|underline";
+      }
+      return "red";
+    },
+  },
+};
+
+export default config;
 ```
 
 ## What Gets Colorized?
@@ -143,11 +203,10 @@ colorize --theme
 - **URLs**: HTTP/HTTPS URLs
 - **HTTP**: Methods (GET, POST, etc.) and status codes (200, 404, 500, etc.)
 - **Source Info**: File paths with line numbers ([src/app.ts:42])
-- **Key-Value Pairs**: JSON-like key=value or key:value pairs
 - **Strings**: Quoted strings with escape sequences
 - **Numbers**: Integers and decimals
 - **Booleans**: true/false
-- **Special Values**: null, undefined, NaN, Infinity
+- **Special Values**: null, undefined
 
 ## Development
 

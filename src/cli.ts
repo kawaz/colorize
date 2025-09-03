@@ -1,395 +1,307 @@
 #!/usr/bin/env bun
 
 import { execSync } from "node:child_process";
-import chalk from "chalk";
-import { getBuildInfo } from "./build-info.macro" with { type: "macro" };
-import { LogLexer } from "./lexer";
-import { processMultiline } from "./multiline";
-import { logParser } from "./parser";
-import { themeInfo } from "./theme";
-import { deduplicateTimestamps } from "./timestamp-dedup";
-import { createColorizeVisitor } from "./visitor";
+import * as fs from "node:fs";
+import * as readline from "node:readline";
+import { Command } from "commander";
+import { version } from "../package.json";
+import { DynamicLexer } from "./lexer-dynamic";
+import { Parser } from "./parser";
+import { RuleEngine } from "./rule-engine";
+import { config as basicConfig } from "./rules-basic";
+import { config as complexConfig } from "./rules";
+import { ThemeResolver } from "./theme-resolver";
+import { Visitor } from "./visitor";
+import { UserConfigLoader } from "./user-config-loader";
 
-// ビルド時に情報を埋め込む
-const BUILD_INFO = getBuildInfo();
-
-// デフォルトで色出力を有効化（パイプ経由でも色を出力）
-// main関数内でオプションに応じて上書きされる
+// デフォルトで色出力を有効化
 if (!process.env.FORCE_COLOR) {
   process.env.FORCE_COLOR = "1";
 }
 
-export interface Options {
-  joinMultiline: boolean;
-  deduplicateTimestamps: boolean;
-  relativeTime: boolean;
-  forceColor: boolean;
-  help: boolean;
-  version: boolean;
-  upgrade: boolean;
+interface CliOptions {
   theme?: string;
+  debug?: boolean;
+  listThemes?: boolean;
+  joinMultiline?: boolean;
+  deduplicateTimestamps?: boolean;
+  relativeTime?: boolean;
+  forceColor?: boolean;
+  upgrade?: boolean;
+  simple?: boolean; // シンプルルールを使用
+  verbose?: boolean;
+  noUserConfig?: boolean; // ユーザー設定を無視
+  generateConfig?: boolean; // サンプル設定を生成
 }
 
-export function parseArgs(args: string[]): Options {
-  const options: Options = {
-    joinMultiline: false,
-    deduplicateTimestamps: false, // デフォルトでOFF
-    relativeTime: false,
-    forceColor: false,
-    help: false,
-    version: false,
-    upgrade: false,
-  };
+class RuleBasedColorizeCli {
+  private ruleEngine: RuleEngine | null = null;
+  private dynamicLexer: DynamicLexer | null = null;
+  private parser: Parser | null = null;
+  private visitor: Visitor | null = null;
+  private themeResolver = new ThemeResolver();
 
-  // 環境変数からオプションを読み込み
-  const envOptions = process.env.COLORIZE_OPTIONS;
-  if (envOptions) {
-    const envArgs = envOptions.trim().split(/\s+/);
-    parseArgsInto(envArgs, options);
-  }
+  constructor(private options: CliOptions) {}
 
-  // コマンドライン引数を処理（環境変数より優先）
-  parseArgsInto(args, options);
+  /**
+   * システムを初期化
+   */
+  async initialize(): Promise<void> {
+    // ルール設定を選択
+    let ruleConfig = this.options.simple ? basicConfig : complexConfig;
 
-  return options;
-}
-
-function parseArgsInto(args: string[], options: Options): void {
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-
-    switch (arg) {
-      case "--join-multiline":
-      case "-j":
-        options.joinMultiline = true;
-        break;
-      case "--no-join-multiline":
-        options.joinMultiline = false;
-        break;
-      case "--dedup-timestamps":
-        options.deduplicateTimestamps = true;
-        break;
-      case "--no-dedup-timestamps":
-        options.deduplicateTimestamps = false;
-        break;
-      case "--relative-time":
-      case "-r":
-        options.relativeTime = true;
-        break;
-      case "--no-relative-time":
-        options.relativeTime = false;
-        break;
-      case "--force-color":
-      case "-c":
-        options.forceColor = true;
-        break;
-      case "--no-force-color":
-        options.forceColor = false;
-        break;
-      case "--theme":
-      case "-t":
-        if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
-          options.theme = args[++i];
-        } else {
-          // テーマ未指定の場合は利用可能なテーマを表示
-          console.log(chalk.bold("Available themes:"));
-          const maxNameLength = Math.max(...Object.keys(themeInfo).map((name) => name.length));
-          for (const [name, description] of Object.entries(themeInfo)) {
-            const paddedName = name.padEnd(maxNameLength);
-            console.log(`  • ${paddedName}  - ${description}`);
-          }
-          console.log("\nUsage: colorize -t <theme-name>");
-          process.exit(0);
+    // ユーザー設定を読み込み
+    if (!this.options.noUserConfig) {
+      const userConfigLoader = new UserConfigLoader();
+      const userConfig = await userConfigLoader.loadUserConfig();
+      
+      if (userConfig) {
+        ruleConfig = userConfigLoader.mergeConfigs(ruleConfig, userConfig);
+        if (this.options.verbose) {
+          console.error("User config loaded and merged");
         }
-        break;
-      case "--no-theme":
-        options.theme = undefined;
-        break;
-      case "--help":
-      case "-h":
-        options.help = true;
-        break;
-      case "--version":
-      case "-V":
-        options.version = true;
-        break;
-      case "upgrade":
-        options.upgrade = true;
-        break;
-    }
-  }
-}
-
-function showVersion() {
-  // シンプルなバージョン表示（一般的なツールと同様）
-  const dirtyFlag = BUILD_INFO.gitDirty ? "-dirty" : "";
-  console.log(`${BUILD_INFO.name} version ${BUILD_INFO.version} (${BUILD_INFO.gitCommit}${dirtyFlag})`);
-}
-
-async function performUpgrade() {
-  console.log(chalk.bold("🔄 Checking for updates..."));
-
-  try {
-    // 実行環境の情報を取得
-    const runtime = process.argv[0]; // node or bun の実行パス
-    const scriptPath = process.argv[1];
-    console.log(chalk.dim(`Current runtime: ${runtime}`));
-    console.log(chalk.dim(`Current installation: ${scriptPath}`));
-
-    // グローバルインストールかどうかを判定
-    const isGlobal =
-      scriptPath.includes("/npm/global/") ||
-      scriptPath.includes("/.npm/") ||
-      scriptPath.includes("/.bun/") ||
-      scriptPath.includes("/node_modules/.bin/");
-
-    // パッケージマネージャーを検出（実行中のランタイムを優先）
-    let packageManager = "npm";
-    let installCommand = "install";
-
-    // process.argv[0]から現在のランタイムを判定
-    if (runtime.includes("bun")) {
-      packageManager = "bun";
-      installCommand = "add";
-    } else if (scriptPath.includes("/.bun/")) {
-      // インストールパスからもbunを検出
-      packageManager = "bun";
-      installCommand = "add";
+      }
     }
 
-    // 最新バージョンを確認
-    const currentVersion = BUILD_INFO.version;
-    console.log(chalk.dim(`Current version: ${currentVersion}`));
+    // ルールエンジンを初期化
+    this.ruleEngine = new RuleEngine(ruleConfig);
+    const tokenDefinitions = this.ruleEngine.buildTokenDefinitions();
 
-    const latestVersionCmd = `npm view @kawaz/colorize version`;
-    const latestVersion = execSync(latestVersionCmd, { encoding: "utf-8" }).trim();
-    console.log(chalk.dim(`Latest version: ${latestVersion}`));
-
-    if (currentVersion === latestVersion) {
-      console.log(chalk.green("✅ Already up to date!"));
-      return;
+    if (this.options.verbose) {
+      console.error(`トークン定義数: ${tokenDefinitions.length}`);
+      console.error(`トークン: ${tokenDefinitions.slice(0, 5).map(d => d.name).join(", ")}...`);
     }
 
-    // アップグレードコマンドを構築
-    const globalFlag = isGlobal ? "-g" : "";
-    const upgradeCmd =
-      packageManager === "npm"
-        ? `npm ${installCommand} ${globalFlag} @kawaz/colorize@latest`
-        : `bun ${installCommand} ${globalFlag} @kawaz/colorize@latest`;
+    // レクサーを初期化
+    this.dynamicLexer = new DynamicLexer(tokenDefinitions);
 
-    console.log(chalk.yellow(`\n📦 Run the following command to upgrade:`));
-    console.log(chalk.cyan(`  ${upgradeCmd}`));
+    // パーサーを初期化
+    this.parser = new Parser(this.dynamicLexer);
 
-    // 実行確認
-    console.log(chalk.dim("\nNote: For security reasons, colorize cannot update itself directly."));
-    console.log(chalk.dim("Please run the command above manually."));
-  } catch (error) {
-    console.error(chalk.red("Failed to check for updates:"), error);
-    process.exit(1);
-  }
-}
+    // テーマを解決
+    const themeConfig = this.options.theme
+      ? { parentTheme: this.options.theme, theme: ruleConfig.theme }
+      : { parentTheme: "default", theme: ruleConfig.theme };
+    const resolvedTheme = this.themeResolver.resolveTheme(themeConfig);
 
-function showVersionVerbose() {
-  // 詳細なバージョン情報
-  const dirtyFlag = BUILD_INFO.gitDirty ? "-dirty" : "";
-  // ISO文字列をDateに変換して再度ISOStringで出力（UTC時刻に正規化）
-  const commitDate =
-    BUILD_INFO.gitCommitDate !== "unknown" ? new Date(BUILD_INFO.gitCommitDate).toISOString() : "unknown";
-  const buildDate = new Date(BUILD_INFO.buildDate).toISOString();
-
-  console.log(`${chalk.bold(BUILD_INFO.name)}`);
-  console.log(`  Version:     ${BUILD_INFO.version}`);
-  console.log(`  Commit:      ${BUILD_INFO.gitCommit}${dirtyFlag} (${BUILD_INFO.gitBranch})`);
-  console.log(`  Commit date: ${commitDate}`);
-  console.log(`  Build date:  ${buildDate}`);
-  console.log(`  Built with:  Bun v${BUILD_INFO.bunVersion}`);
-}
-
-function showHelp() {
-  console.log(`
-${chalk.bold(BUILD_INFO.name)} v${BUILD_INFO.version} - ${BUILD_INFO.description}
-
-${chalk.bold("Usage:")}
-  cat app.log | colorize [options]
-  tail -f app.log | colorize -c | less -R
-
-${chalk.bold("Options:")}
-  -j, --join-multiline       Join multiline log entries
-  --dedup-timestamps         Remove duplicate timestamps (e.g., kubectl --timestamps)
-  -r, --relative-time        Show relative time next to timestamps (e.g., 2.5h)
-  -c, --force-color          Force color output even when piped or redirected
-  -t, --theme <name>         Color theme (use -t without name to list themes)
-  -h, --help                 Show this help message
-  -V, --version              Show version information
-
-${chalk.bold("Environment Variables:")}
-  COLORIZE_OPTIONS   Set default options (e.g., export COLORIZE_OPTIONS="-r -t github")
-                     Command-line arguments override environment settings
-                     All options support --no- prefix to disable/unset
-                     (e.g., --no-theme, --no-dedup-timestamps)
-`);
-}
-
-function processLine(line: string, visitor: ReturnType<typeof createColorizeVisitor>): string {
-  try {
-    // 字句解析
-    const lexResult = LogLexer.tokenize(line);
-
-    // Lexer errors are silently ignored
-
-    // 構文解析
-    logParser.input = lexResult.tokens;
-    const cst = logParser.logContent();
-
-    // Parser errors are silently ignored
-
-    // 色付け
-    return visitor.visit(cst);
-  } catch {
-    // エラーが発生した場合は元の行を返す
-    return line;
-  }
-}
-
-export async function main() {
-  const options = parseArgs(process.argv.slice(2));
-
-  if (options.help) {
-    showHelp();
-    process.exit(0);
+    // ビジターを初期化
+    this.visitor = new Visitor(this.parser, {
+      theme: resolvedTheme,
+      showRelativeTime: this.options.relativeTime,
+    });
   }
 
-  if (options.version) {
-    // --version --verbose または --version -v で詳細表示
-    const verboseIndex = process.argv.indexOf("--verbose");
-    const vIndex = process.argv.indexOf("-v");
-    if (verboseIndex !== -1 || vIndex !== -1) {
-      showVersionVerbose();
-    } else {
-      showVersion();
-    }
-    process.exit(0);
-  }
+  /**
+   * 入力を処理
+   */
+  async processInput(input: NodeJS.ReadStream | fs.ReadStream): Promise<void> {
+    const rl = readline.createInterface({
+      input,
+      output: process.stdout,
+      terminal: false,
+    });
 
-  if (options.upgrade) {
-    await performUpgrade();
-    process.exit(0);
-  }
+    let previousLine = "";
+    const timestampRegex = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/;
 
-  // 色出力の強制設定
-  if (options.forceColor) {
-    process.env.FORCE_COLOR = "3"; // 最高レベルの色サポート
-    chalk.level = 3; // chalkにも明示的に設定
-  }
+    for await (const line of rl) {
+      let outputLine = line;
 
-  // Visitorインスタンスを作成（相対時間オプションとテーマを渡す）
-  const visitor = createColorizeVisitor({
-    showRelativeTime: options.relativeTime,
-    theme: options.theme,
-  });
-
-  try {
-    // マルチライン処理が必要な場合のみバッチモードを使用
-    if (options.joinMultiline) {
-      // 通常モード（一括読み込み）
-      let input: string;
-
-      if (typeof Bun !== "undefined") {
-        input = await Bun.stdin.text();
-      } else {
-        // Node.js環境でstdinを全て読み込む
-        const chunks: Buffer[] = [];
-        for await (const chunk of process.stdin) {
-          chunks.push(chunk);
+      // タイムスタンプ重複除去
+      if (this.options.deduplicateTimestamps && previousLine) {
+        const prevTimestamp = previousLine.match(timestampRegex)?.[0];
+        const currTimestamp = line.match(timestampRegex)?.[0];
+        
+        if (prevTimestamp && currTimestamp && prevTimestamp === currTimestamp) {
+          // 同じタイムスタンプの場合、現在行のタイムスタンプを空白で置き換え
+          outputLine = line.replace(timestampRegex, " ".repeat(currTimestamp.length));
         }
-        input = Buffer.concat(chunks).toString("utf-8");
       }
 
-      if (!input) {
+      if (this.options.debug) {
+        // デバッグモード
+        const parseResult = this.parser?.parseLine(outputLine);
+        console.log(
+          JSON.stringify(
+            {
+              line: outputLine,
+              tokens: parseResult?.tokens.map((t) => ({
+                type: t.tokenType.name,
+                value: t.image,
+              })),
+              errors: [
+                ...(parseResult?.lexErrors.map((e) => `Lex: ${e.message}`) || []),
+                ...(parseResult?.parseErrors.map((e) => `Parse: ${e.message}`) || []),
+              ],
+            },
+            null,
+            2,
+          ),
+        );
+      } else {
+        // 通常モード：色付けして出力
+        const colorized = this.processLine(outputLine);
+        console.log(colorized);
+      }
+
+      previousLine = line;
+    }
+  }
+
+  /**
+   * 単一行を処理
+   */
+  private processLine(line: string): string {
+    if (!this.parser || !this.visitor) {
+      return line;
+    }
+
+    try {
+      const parseResult = this.parser.parseLine(line);
+
+      if (parseResult.lexErrors.length > 0 || parseResult.parseErrors.length > 0) {
+        // エラーがある場合は元のテキストを返す
+        return line;
+      }
+
+      // トークンを色付け
+      return this.visitor.processTokens(parseResult.tokens);
+    } catch (error) {
+      // エラーが発生した場合は元のテキストを返す
+      if (this.options.debug) {
+        console.error("Error processing line:", error);
+      }
+      return line;
+    }
+  }
+
+  /**
+   * 利用可能なテーマをリスト表示
+   */
+  listThemes(): void {
+    const themes = this.themeResolver.getAvailableThemes();
+    console.log("Available themes:");
+    for (const theme of themes) {
+      console.log(`  - ${theme}`);
+    }
+  }
+
+  /**
+   * アップグレード処理
+   */
+  async upgrade(): Promise<void> {
+    console.log("Checking for updates...");
+    
+    try {
+      // 最新バージョンを確認
+      const result = execSync("npm view colorize version", { encoding: "utf-8" });
+      const latestVersion = result.trim();
+      
+      if (latestVersion === version) {
+        console.log(`Already using the latest version (${version})`);
+        return;
+      }
+
+      console.log(`New version available: ${latestVersion} (current: ${version})`);
+      console.log("Upgrading...");
+
+      // アップグレード実行
+      execSync("npm update -g colorize", { stdio: "inherit" });
+      console.log("Successfully upgraded!");
+    } catch (error) {
+      console.error("Failed to upgrade:", error);
+      process.exit(1);
+    }
+  }
+}
+
+/**
+ * メイン関数
+ */
+async function main() {
+  const program = new Command();
+
+  program
+    .name("colorize")
+    .description("Colorize log output with rule-based tokenization")
+    .version(version)
+    .option("-t, --theme <theme>", "color theme to use")
+    .option("-d, --debug", "enable debug output")
+    .option("--list-themes", "list available themes")
+    .option("-m, --join-multiline", "join multiline logs")
+    .option("--deduplicate-timestamps", "remove duplicate timestamps")
+    .option("-r, --relative-time", "show relative timestamps")
+    .option("--force-color", "force color output")
+    .option("--upgrade", "upgrade to the latest version")
+    .option("--simple", "use simple rules instead of complex")
+    .option("-v, --verbose", "verbose output")
+    .option("--no-user-config", "ignore user configuration file")
+    .option("--generate-config", "generate sample configuration file")
+    .argument("[file]", "file to process (default: stdin)")
+    .action(async (file, options: CliOptions) => {
+      // force-colorオプション処理
+      if (options.forceColor) {
+        process.env.FORCE_COLOR = "1";
+      }
+
+      const cli = new RuleBasedColorizeCli(options);
+
+      // サンプル設定生成
+      if (options.generateConfig) {
+        const loader = new UserConfigLoader();
+        console.log(loader.generateSampleConfig());
+        console.error("\nSave this to one of these locations:");
+        loader.getConfigPaths().forEach(p => console.error(`  - ${p}`));
         process.exit(0);
       }
 
-      // タイムスタンプ重複削除
-      let processed = input;
-      if (options.deduplicateTimestamps) {
-        processed = deduplicateTimestamps(processed, { enabled: true });
+      // アップグレード処理
+      if (options.upgrade) {
+        await cli.upgrade();
+        process.exit(0);
       }
 
-      // マルチライン処理
-      processed = processMultiline(processed, {
-        joinMultiline: options.joinMultiline,
-      });
-
-      // 行ごとに処理
-      const lines = processed.split("\n");
-      const colorizedLines: string[] = [];
-
-      for (const line of lines) {
-        if (line.trim() === "") {
-          // 空行はそのまま
-          colorizedLines.push(line);
-        } else {
-          colorizedLines.push(processLine(line, visitor));
-        }
+      // テーマ一覧表示
+      if (options.listThemes) {
+        cli.listThemes();
+        process.exit(0);
       }
 
-      // 出力
-      console.log(colorizedLines.join("\n"));
-    } else {
-      // ストリーム処理（行単位で読み込み、リアルタイム出力）
-      for await (const line of console) {
-        let processedLine = line;
-
-        // タイムスタンプ重複削除
-        if (options.deduplicateTimestamps) {
-          processedLine = deduplicateTimestamps(processedLine, { enabled: true });
-        }
-
-        // 色付け処理
-        if (processedLine.trim() === "") {
-          console.log(processedLine);
-        } else {
-          console.log(processLine(processedLine, visitor));
-        }
+      // システムを初期化
+      try {
+        await cli.initialize();
+      } catch (error) {
+        console.error("Failed to initialize:", error);
+        process.exit(1);
       }
-    }
-  } catch (error) {
-    console.error(chalk.red("Error:"), error);
-    process.exit(1);
-  }
+
+      // 入力ソースを決定
+      const input = file ? fs.createReadStream(file) : process.stdin;
+
+      // 入力を処理
+      await cli.processInput(input);
+    });
+
+  await program.parseAsync(process.argv);
 }
 
-// mainを実行する関数
-export async function run() {
-  // Node.js環境でconsoleにAsyncIteratorを追加（CLI実行時のみ必要）
-  if (typeof console[Symbol.asyncIterator] === "undefined") {
-    console[Symbol.asyncIterator] = async function* () {
-      const readline = await import("node:readline");
-      const rl = readline.createInterface({
-        input: process.stdin,
-        terminal: false,
-      });
+// エラーハンドリング
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+  process.exit(1);
+});
 
-      for await (const line of rl) {
-        yield line;
-      }
-    };
-  }
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
 
-  // エラーハンドリング
-  process.on("uncaughtException", (err) => {
-    console.error(chalk.red("Uncaught exception:"), err.message);
-    process.exit(1);
-  });
-
-  process.on("unhandledRejection", (reason, promise) => {
-    console.error(chalk.red("Unhandled rejection at:"), promise, chalk.red("reason:"), reason);
-    process.exit(1);
-  });
-
-  // メイン処理実行
-  await main().catch((err) => {
-    console.error(chalk.red("Fatal error:"), err);
+// メイン関数を実行
+if (require.main === module) {
+  main().catch((error) => {
+    console.error("Fatal error:", error);
     process.exit(1);
   });
 }
+
+export { RuleBasedColorizeCli };
