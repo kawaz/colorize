@@ -5,6 +5,7 @@ test/output/
 
 # Documentation samples (but not setup docs)
 docs/sample-*
+docs/sample-log-*.txt
 
 # Build output
 dist/
