@@ -58,8 +58,9 @@ const tokens = {
     },
   },
 
-  ws: /\s+/,
-  newline: /\r?\n/,
+  // === ログレベル ===
+  // TODO: 現時点では動作しないが（将来的に名前付きキャプチャグループが実装された際は logLevel_DEBUG とかで色がつくはず）
+  logLevel: /\b(?:(?<DEBUG>DEBUG|debug)|(?<INFO>INFO|info)|(?<WARN>WARN|warn|WARNING|warning)|(?<ERROR>ERROR|error)|(?<FATAL>FATAL|fatal)|(?<TRACE>TRACE|trace))\b/,
 
   boolean: /\b(?:true|false)\b/,
   number: /\b\d+\b/,
