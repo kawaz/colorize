@@ -1,3 +1,5 @@
+import type { TokenContext } from "./types";
+
 // トークンとしての優先順位はキー名の定義順で決まる
 // 値が配列の場合は (?: と ) で囲われたパターンとして展開される
 // 値がオブジェクトの場合はオブジェクトのキー名はグローバルなパターンを持たないトークンとしてトップに展開される。この時パターンを持つトップのキーとの重複は不可。
@@ -56,7 +58,7 @@ const tokens = {
     },
   },
 
-  ws: /\b\s*\b/,
+  ws: /\s+/,
   newline: /\r?\n/,
 
   boolean: /\b(?:true|false)\b/,
@@ -89,7 +91,7 @@ export const config = {
   // この辺はコンフィグとかで使う？
   theme: {
     // TokenContext は今後どういうのが使いやすいか考える
-    string: (tokenContext: Record<string, unknown>) => tokenContext?.value as string,
+    string: (tokenContext: TokenContext) => tokenContext?.value,
     timestamp: {
       color: "red",
       fontWeight: "bold",
