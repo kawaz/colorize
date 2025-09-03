@@ -108,8 +108,9 @@ export class RuleEngine {
   private expandPattern(pattern: RegExp, currentToken: string): RegExp {
     const cacheKey = `${currentToken}:${pattern.source}`;
 
-    if (this.expandedPatterns.has(cacheKey)) {
-      return this.expandedPatterns.get(cacheKey)!;
+    const cached = this.expandedPatterns.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
     }
 
     let source = pattern.source;
@@ -241,8 +242,8 @@ export class RuleEngine {
     // 名前付きキャプチャグループを抽出（ネストした括弧に対応）
     const namedGroupPattern = /\(\?<([a-zA-Z][a-zA-Z0-9_]*)>/g;
 
-    let match: RegExpExecArray | null;
-    while ((match = namedGroupPattern.exec(source)) !== null) {
+    let match = namedGroupPattern.exec(source);
+    while (match !== null) {
       const name = match[1];
       const startPos = match.index + match[0].length;
 
@@ -276,6 +277,9 @@ export class RuleEngine {
           console.warn(`Failed to create regex for subtoken ${name}: ${groupPattern}`);
         }
       }
+
+      // 次のマッチを検索
+      match = namedGroupPattern.exec(source);
     }
 
     return subTokens;

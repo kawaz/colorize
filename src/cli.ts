@@ -256,7 +256,9 @@ async function main() {
         const loader = new UserConfigLoader();
         console.log(loader.generateSampleConfig());
         console.error("\nSave this to one of these locations:");
-        loader.getConfigPaths().forEach((p) => console.error(`  - ${p}`));
+        for (const p of loader.getConfigPaths()) {
+          console.error(`  - ${p}`);
+        }
         process.exit(0);
       }
 

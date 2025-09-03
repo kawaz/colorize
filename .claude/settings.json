@@ -1,32 +1,23 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '📝 Code modified - Running checks...'; cd \"$CLAUDE_PROJECT_DIR\" && if [ -f \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit.sh\" ]; then bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit.sh\"; fi"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash:git commit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '📋 Pre-commit validation...'; cd \"$CLAUDE_PROJECT_DIR\" && bun run lint --write 2>&1 | head -5 && FORCE_COLOR=1 bun test 2>&1 | grep -E '(pass|fail)' | tail -2"
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit.ts\""
           }
         ]
       }
     ],
-    "UserSubmitPrompt": [
+    "Notification": [
       {
         "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && if [ -f README.md ] && [ -f README.ja.md ]; then EN=$(grep '^#' README.md | wc -l); JA=$(grep '^#' README.ja.md | wc -l); if [ \"$EN\" != \"$JA\" ]; then echo '⚠️  README.md ($EN sections) and README.ja.md ($JA sections) have different structures'; fi; fi"
+            "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/notify.ts\""
           }
         ]
       }

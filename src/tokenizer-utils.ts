@@ -18,7 +18,7 @@ export function extractNamedGroups(token: IToken, pattern: RegExp): Map<string, 
 
   // パターンを再実行して名前付きグループを取得
   const match = pattern.exec(token.image);
-  if (match && match.groups) {
+  if (match?.groups) {
     for (const [name, value] of Object.entries(match.groups)) {
       if (value !== undefined) {
         groups.set(name, value);
@@ -37,9 +37,10 @@ export function getNamedGroupNames(pattern: RegExp): string[] {
   const source = pattern.source;
   const namedGroupPattern = /\(\?<([a-zA-Z][a-zA-Z0-9_]*)>/g;
 
-  let match: RegExpExecArray | null;
-  while ((match = namedGroupPattern.exec(source)) !== null) {
+  let match = namedGroupPattern.exec(source);
+  while (match !== null) {
     names.push(match[1]);
+    match = namedGroupPattern.exec(source);
   }
 
   return names;
