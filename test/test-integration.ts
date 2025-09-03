@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 
-import { RuleEngine } from "../src/rule-engine";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { ConfigLoader } from "../src/config-loader";
+import { DebugOutputGenerator } from "../src/debug-output";
 import { DynamicLexer } from "../src/lexer-dynamic";
 import { GenericParser } from "../src/parser-generic";
-import { GenericVisitor } from "../src/visitor-generic";
-import { ConfigLoader } from "../src/config-loader";
+import { RuleEngine } from "../src/rule-engine";
 import { ThemeResolver } from "../src/theme-resolver";
-import { DebugOutputGenerator } from "../src/debug-output";
-import * as fs from "fs";
-import * as path from "path";
+import { GenericVisitor } from "../src/visitor-generic";
 
 async function runIntegrationTest() {
   console.log("Starting integration test...\n");
@@ -59,7 +59,7 @@ async function runIntegrationTest() {
     console.log("\n8. Processing sample log...");
     const sampleLogPath = path.join(__dirname, "sample-log.txt");
     const sampleLog = fs.readFileSync(sampleLogPath, "utf-8");
-    const lines = sampleLog.split("\n").filter(line => line.length > 0);
+    const lines = sampleLog.split("\n").filter((line) => line.length > 0);
 
     console.log(`   Processing ${lines.length} lines...\n`);
 
@@ -72,7 +72,7 @@ async function runIntegrationTest() {
       // レクサーでトークナイズ
       const lexResult = dynamicLexer.tokenize(line);
       console.log(`Tokens: ${lexResult.tokens.length} tokens`);
-      
+
       if (lexResult.errors.length > 0) {
         console.log(`Lex errors: ${lexResult.errors.length}`);
       }
@@ -94,12 +94,11 @@ async function runIntegrationTest() {
       // デバッグ情報を生成
       const debugInfo = debugGenerator.generateDebugOutput(line);
       if (debugInfo.length > 0 && debugInfo[0].tokens.length > 0) {
-        console.log(`Debug:  ${debugInfo[0].tokens.map(t => t.type).join(", ")}`);
+        console.log(`Debug:  ${debugInfo[0].tokens.map((t) => t.type).join(", ")}`);
       }
     }
 
     console.log("\n✅ Integration test completed successfully!");
-    
   } catch (error) {
     console.error("\n❌ Integration test failed:");
     console.error(error);

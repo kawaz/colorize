@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 
-import * as fs from "fs";
-import * as readline from "readline";
+import * as fs from "node:fs";
+import * as readline from "node:readline";
 import { Command } from "commander";
 import { version } from "../package.json";
-
-// 新しいシステムのインポート
-import { RuleEngine } from "./rule-engine";
+import { ConfigLoader } from "./config-loader";
+import { DebugOutputGenerator } from "./debug-output";
 import { DynamicLexer } from "./lexer-dynamic";
 import { GenericParser } from "./parser-generic";
-import { GenericVisitor } from "./visitor-generic";
-import { ConfigLoader } from "./config-loader";
+// 新しいシステムのインポート
+import { RuleEngine } from "./rule-engine";
 import { ThemeResolver } from "./theme-resolver";
-import { DebugOutputGenerator } from "./debug-output";
+import { GenericVisitor } from "./visitor-generic";
 
 interface CliOptions {
   theme?: string;
@@ -54,7 +53,7 @@ class ColorizeCli {
     this.parser = new GenericParser(this.dynamicLexer);
 
     // テーマを解決
-    const themeConfig = this.options.theme 
+    const themeConfig = this.options.theme
       ? { parentTheme: this.options.theme, theme: config.themeConfig.theme }
       : config.themeConfig;
     const resolvedTheme = this.themeResolver.resolveTheme(themeConfig);
@@ -86,12 +85,12 @@ class ColorizeCli {
     for await (const line of rl) {
       if (this.options.debug || this.options.debugJson) {
         // デバッグモード
-        const debugInfo = this.debugGenerator!.generateDebugOutput(line);
+        const debugInfo = this.debugGenerator?.generateDebugOutput(line);
         debugOutputs.push(...debugInfo);
-        
+
         if (!this.options.debugJson) {
           // 通常のデバッグ出力
-          console.log(this.debugGenerator!.formatDebugOutput(debugInfo));
+          console.log(this.debugGenerator?.formatDebugOutput(debugInfo));
         }
       } else {
         // 通常モード：色付けして出力
@@ -104,10 +103,10 @@ class ColorizeCli {
     if (this.options.debugJson && debugOutputs.length > 0) {
       if (this.options.debugJson === true) {
         // 整形されたJSON
-        console.log(this.debugGenerator!.formatDebugOutput(debugOutputs));
+        console.log(this.debugGenerator?.formatDebugOutput(debugOutputs));
       } else {
         // JSONL形式
-        console.log(this.debugGenerator!.formatDebugOutputAsJsonl(debugOutputs));
+        console.log(this.debugGenerator?.formatDebugOutputAsJsonl(debugOutputs));
       }
     }
   }
@@ -122,7 +121,7 @@ class ColorizeCli {
 
     try {
       const parseResult = this.parser.parse(line);
-      
+
       if (parseResult.parseErrors.length > 0) {
         // パースエラーがある場合は元のテキストを返す
         return line;

@@ -1,5 +1,6 @@
-import { createToken, Lexer, IToken } from "chevrotain";
+import { createToken, type IToken, Lexer, type TokenType } from "chevrotain";
 import type { TokenDefinition } from "./rule-engine";
+import type { TokenConfig, TokenWithSubTokens } from "./types";
 
 export class DynamicLexer {
   private tokens = new Map<string, IToken>();
@@ -35,7 +36,7 @@ export class DynamicLexer {
     for (const def of this.definitions) {
       if (def.pattern) {
         const categories: IToken[] = [];
-        
+
         // カテゴリを設定
         if (def.categories) {
           for (const catName of def.categories) {
@@ -46,11 +47,11 @@ export class DynamicLexer {
           }
         }
 
-        const tokenConfig: any = {
+        const tokenConfig: TokenConfig = {
           name: def.name,
           pattern: def.pattern,
         };
-        
+
         if (categories.length > 0) {
           tokenConfig.categories = categories;
         }
@@ -62,7 +63,7 @@ export class DynamicLexer {
 
         // サブトークン情報をメタデータとして保存
         if (def.subTokens) {
-          (token as any).subTokens = def.subTokens;
+          (token as TokenWithSubTokens).subTokens = def.subTokens;
         }
       } else if (def.isContextual) {
         // コンテキスト依存トークン（パターンなし）
@@ -84,11 +85,11 @@ export class DynamicLexer {
       }
     }
     this.tokenList = Array.from(uniqueTokens.values());
-    
+
     // 優先順位に従ってソート
     this.tokenList.sort((a, b) => {
-      const defA = this.definitions.find(d => d.name === a.name);
-      const defB = this.definitions.find(d => d.name === b.name);
+      const defA = this.definitions.find((d) => d.name === a.name);
+      const defB = this.definitions.find((d) => d.name === b.name);
       return (defA?.priority ?? 0) - (defB?.priority ?? 0);
     });
   }
@@ -106,9 +107,9 @@ export class DynamicLexer {
       this.tokenList.unshift(whitespace);
       this.tokens.set("Whitespace", whitespace);
     }
-    
+
     // newline は rules.ts で定義されているのでスキップ
-    
+
     // フォールバックトークン（最後に追加）
     if (!this.tokens.has("Text")) {
       const text = createToken({

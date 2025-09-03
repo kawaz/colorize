@@ -1,6 +1,6 @@
-import chalk from "chalk";
+import type { ThemeValue } from "./types";
 
-export type ThemeValue = string | object | ((context: any) => string) | undefined;
+export { type ThemeValue };
 export type Theme = Record<string, ThemeValue>;
 
 export interface ThemeConfig {

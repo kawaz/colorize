@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 
-import * as fs from "fs";
-import * as readline from "readline";
+import * as fs from "node:fs";
+import * as readline from "node:readline";
 import { Command } from "commander";
 import { version } from "../package.json";
-
-// 新しいシステムのインポート
-import { RuleEngine } from "./rule-engine";
 import { DynamicLexer } from "./lexer-dynamic";
 import { SimpleParser } from "./parser-simple";
-import { SimpleVisitor } from "./visitor-simple";
+// 新しいシステムのインポート
+import { RuleEngine } from "./rule-engine";
 // import { ConfigLoader } from "./config-loader";
 import { config } from "./rules-simple";
 import { ThemeResolver } from "./theme-resolver";
+import { SimpleVisitor } from "./visitor-simple";
 
 interface CliOptions {
   theme?: string;
@@ -45,9 +44,9 @@ class SimpleColorizeCli {
     this.parser = new SimpleParser(this.dynamicLexer);
 
     // テーマを解決
-    const themeConfig = this.options.theme 
+    const themeConfig = this.options.theme
       ? { parentTheme: this.options.theme, theme: config.theme }
-      : { parentTheme: 'default', theme: config.theme };
+      : { parentTheme: "default", theme: config.theme };
     const resolvedTheme = this.themeResolver.resolveTheme(themeConfig);
 
     // ビジターを初期化
@@ -69,18 +68,24 @@ class SimpleColorizeCli {
     for await (const line of rl) {
       if (this.options.debug) {
         // デバッグモード
-        const parseResult = this.parser!.parseLine(line);
-        console.log(JSON.stringify({
-          line,
-          tokens: parseResult.tokens.map(t => ({
-            type: t.tokenType.name,
-            value: t.image,
-          })),
-          errors: [
-            ...parseResult.lexErrors.map(e => `Lex: ${e.message}`),
-            ...parseResult.parseErrors.map(e => `Parse: ${e.message}`),
-          ],
-        }, null, 2));
+        const parseResult = this.parser?.parseLine(line);
+        console.log(
+          JSON.stringify(
+            {
+              line,
+              tokens: parseResult.tokens.map((t) => ({
+                type: t.tokenType.name,
+                value: t.image,
+              })),
+              errors: [
+                ...parseResult.lexErrors.map((e) => `Lex: ${e.message}`),
+                ...parseResult.parseErrors.map((e) => `Parse: ${e.message}`),
+              ],
+            },
+            null,
+            2,
+          ),
+        );
       } else {
         // 通常モード：色付けして出力
         const colorized = this.processLine(line);
@@ -99,7 +104,7 @@ class SimpleColorizeCli {
 
     try {
       const parseResult = this.parser.parseLine(line);
-      
+
       if (parseResult.lexErrors.length > 0 || parseResult.parseErrors.length > 0) {
         // エラーがある場合は元のテキストを返す
         return line;

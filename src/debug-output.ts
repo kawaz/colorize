@@ -1,4 +1,4 @@
-import type { IToken, CstNode } from "chevrotain";
+import type { CstNode, IToken } from "chevrotain";
 import type { DynamicLexer } from "./lexer-dynamic";
 import type { GenericParser } from "./parser-generic";
 
@@ -31,14 +31,14 @@ export interface DebugOutput {
 export class DebugOutputGenerator {
   constructor(
     private dynamicLexer: DynamicLexer,
-    private parser: GenericParser
+    private parser: GenericParser,
   ) {}
 
   /**
    * 行ごとのデバッグ情報を生成
    */
   generateDebugOutput(text: string): DebugOutput[] {
-    const lines = text.split('\n');
+    const lines = text.split("\n");
     const results: DebugOutput[] = [];
 
     for (let i = 0; i < lines.length; i++) {
@@ -71,7 +71,7 @@ export class DebugOutputGenerator {
 
     // パーサーでパース
     const parseResult = this.parser.parse(line);
-    
+
     const debugOutput: DebugOutput = {
       line,
       lineNumber,
@@ -86,12 +86,12 @@ export class DebugOutputGenerator {
     // エラーを収集
     const errors: string[] = [];
     if (lexResult.errors.length > 0) {
-      errors.push(...lexResult.errors.map(e => `Lex error: ${e.message}`));
+      errors.push(...lexResult.errors.map((e) => `Lex error: ${e.message}`));
     }
     if (parseResult.parseErrors.length > 0) {
-      errors.push(...parseResult.parseErrors.map(e => `Parse error: ${e.message}`));
+      errors.push(...parseResult.parseErrors.map((e) => `Parse error: ${e.message}`));
     }
-    
+
     if (errors.length > 0) {
       debugOutput.errors = errors;
     }
@@ -103,7 +103,7 @@ export class DebugOutputGenerator {
    * トークン情報を抽出
    */
   private extractTokenInfo(tokens: IToken[]): TokenInfo[] {
-    return tokens.map(token => {
+    return tokens.map((token) => {
       const info: TokenInfo = {
         type: token.tokenType.name,
         value: token.image,
@@ -144,7 +144,7 @@ export class DebugOutputGenerator {
     for (const [name, pattern] of subTokens) {
       const regex = new RegExp(`(?<${name}>${pattern.source}`);
       const match = regex.exec(text);
-      if (match && match.groups && match.groups[name]) {
+      if (match?.groups?.[name]) {
         result[name] = match.groups[name];
       }
     }
@@ -222,6 +222,6 @@ export class DebugOutputGenerator {
    * デバッグ出力を1行のJSONLとして出力
    */
   formatDebugOutputAsJsonl(debugOutput: DebugOutput[]): string {
-    return debugOutput.map(item => JSON.stringify(item)).join('\n');
+    return debugOutput.map((item) => JSON.stringify(item)).join("\n");
   }
 }

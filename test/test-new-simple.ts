@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 
-import { RuleEngine } from "../src/rule-engine";
 import { DynamicLexer } from "../src/lexer-dynamic";
 import { SimpleParser } from "../src/parser-simple";
-import { SimpleVisitor } from "../src/visitor-simple";
+import { RuleEngine } from "../src/rule-engine";
 import { ThemeResolver } from "../src/theme-resolver";
+import { SimpleVisitor } from "../src/visitor-simple";
 
 async function runSimpleTest() {
   console.log("Starting simple test...\n");
@@ -18,7 +18,7 @@ async function runSimpleTest() {
         number: /\d+/,
         word: /[a-zA-Z]+/,
         space: /\s+/,
-      }
+      },
     };
     console.log("   ✓ Configuration created");
 
@@ -48,7 +48,7 @@ async function runSimpleTest() {
         number: "yellow",
         word: "green",
         space: "",
-      }
+      },
     });
     console.log("   ✓ Theme resolved");
 
@@ -69,36 +69,35 @@ async function runSimpleTest() {
 
     for (const input of testInputs) {
       console.log(`\nInput:  "${input}"`);
-      
+
       // パース
       const parseResult = parser.parseLine(input);
       console.log(`Tokens: ${parseResult.tokens.length}`);
-      
+
       if (parseResult.lexErrors.length > 0) {
         console.log(`Lex errors: ${parseResult.lexErrors.length}`);
         for (const error of parseResult.lexErrors) {
           console.log(`  - ${error.message}`);
         }
       }
-      
+
       if (parseResult.parseErrors.length > 0) {
         console.log(`Parse errors: ${parseResult.parseErrors.length}`);
         for (const error of parseResult.parseErrors) {
           console.log(`  - ${error.message}`);
         }
       }
-      
+
       // トークンタイプを表示
-      const tokenTypes = parseResult.tokens.map(t => t.tokenType.name).join(", ");
+      const tokenTypes = parseResult.tokens.map((t) => t.tokenType.name).join(", ");
       console.log(`Types:  ${tokenTypes}`);
-      
+
       // 色付け
       const colorized = visitor.processTokens(parseResult.tokens);
       console.log(`Output: ${colorized}`);
     }
 
     console.log("\n✅ Simple test completed successfully!");
-    
   } catch (error) {
     console.error("\n❌ Simple test failed:");
     console.error(error);

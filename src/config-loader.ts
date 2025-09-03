@@ -1,9 +1,10 @@
-import * as fs from "fs";
-import * as path from "path";
-import { homedir } from "os";
+import * as fs from "node:fs";
+import { homedir } from "node:os";
+import * as path from "node:path";
 import type { TokenValue } from "./rule-engine";
-import type { Theme, ThemeConfig } from "./theme-resolver";
 import { config as defaultConfig } from "./rules";
+import type { Theme, ThemeConfig } from "./theme-resolver";
+import type { ModuleExports } from "./types";
 
 export interface UserConfig {
   tokens?: Record<string, TokenValue>;
@@ -41,27 +42,27 @@ export class ConfigLoader {
         try {
           // TypeScript/JavaScriptファイルを動的にインポート
           const module = await this.dynamicImport(configPath);
-          
+
           if (module.default) {
             return module.default as UserConfig;
           } else if (module.config) {
             return module.config as UserConfig;
           }
-          
+
           return module as UserConfig;
         } catch (error) {
           console.error(`Failed to load user config from ${configPath}:`, error);
         }
       }
     }
-    
+
     return null;
   }
 
   /**
    * 動的インポート（TypeScriptサポート）
    */
-  private async dynamicImport(filePath: string): Promise<any> {
+  private async dynamicImport(filePath: string): Promise<ModuleExports> {
     if (filePath.endsWith(".ts")) {
       // TypeScriptファイルの場合は、ts-nodeまたはesbuildで処理
       try {
@@ -75,7 +76,7 @@ export class ConfigLoader {
           write: false,
           external: ["chalk", "chevrotain"],
         });
-        
+
         if (result.outputFiles && result.outputFiles.length > 0) {
           const code = result.outputFiles[0].text;
           const module = { exports: {} };
@@ -83,12 +84,12 @@ export class ConfigLoader {
           func(module, module.exports, require);
           return module.exports;
         }
-      } catch (error) {
+      } catch (_error) {
         // esbuildが利用できない場合は、通常のrequireを試みる
         console.warn("esbuild not available, trying direct require");
       }
     }
-    
+
     // JavaScriptファイルまたはフォールバック
     return require(filePath);
   }
@@ -96,7 +97,7 @@ export class ConfigLoader {
   /**
    * 設定をマージ
    */
-  private mergeConfigs(defaultConfig: any, userConfig: UserConfig | null): LoadedConfig {
+  private mergeConfigs(defaultConfig: typeof defaultConfig, userConfig: UserConfig | null): LoadedConfig {
     // トークンをマージ
     const tokens = { ...defaultConfig.tokens };
     if (userConfig?.tokens) {
@@ -137,13 +138,13 @@ export class ConfigLoader {
           // JavaScriptファイルのみサポート
           if (configPath.endsWith(".js")) {
             const module = require(configPath);
-            
+
             if (module.default) {
               return module.default as UserConfig;
             } else if (module.config) {
               return module.config as UserConfig;
             }
-            
+
             return module as UserConfig;
           }
         } catch (error) {
@@ -151,7 +152,7 @@ export class ConfigLoader {
         }
       }
     }
-    
+
     return null;
   }
 }

@@ -1,9 +1,9 @@
-import { CstParser, IToken } from "chevrotain";
+import { CstParser, type IToken } from "chevrotain";
 import type { DynamicLexer } from "./lexer-dynamic";
 
 export class GenericParser extends CstParser {
   private tokenMap: Map<string, IToken>;
-  
+
   constructor(private dynamicLexer: DynamicLexer) {
     const tokens = dynamicLexer.getAllTokens();
     super(tokens, {
@@ -11,7 +11,7 @@ export class GenericParser extends CstParser {
       nodeLocationTracking: "full",
       maxLookahead: 4,
     });
-    
+
     this.tokenMap = dynamicLexer.getTokenMap();
     this.performSelfAnalysis();
   }
@@ -31,13 +31,13 @@ export class GenericParser extends CstParser {
             }
           },
         },
-        { 
+        {
           ALT: () => {
             const newline = this.tokenMap.get("newline") || this.tokenMap.get("Newline");
             if (newline) {
               this.CONSUME(newline);
             }
-          }
+          },
         }, // 空行
       ]);
     });
@@ -47,17 +47,17 @@ export class GenericParser extends CstParser {
   private logElement = this.RULE("logElement", () => {
     // 動的にトークンを処理
     const alternatives: any[] = [];
-    
+
     // 全トークンに対してORを構築
     for (const token of this.dynamicLexer.getAllTokens()) {
       // 特殊トークンはスキップ
       if (token.name === "Newline" || token.name === "newline") continue;
-      
+
       alternatives.push({
-        ALT: () => this.CONSUME(token)
+        ALT: () => this.CONSUME(token),
       });
     }
-    
+
     if (alternatives.length > 0) {
       this.OR(alternatives);
     }
@@ -70,7 +70,7 @@ export class GenericParser extends CstParser {
     const lexResult = this.dynamicLexer.tokenize(text);
     this.input = lexResult.tokens;
     const cst = this.logContent();
-    
+
     return {
       cst,
       lexErrors: lexResult.errors,

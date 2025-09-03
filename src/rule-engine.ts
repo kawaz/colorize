@@ -1,5 +1,3 @@
-import type { TokenPattern } from "chevrotain";
-
 export type TokenValue = RegExp | RegExp[] | Record<string, TokenValue> | null;
 
 export interface TokenDefinition {
@@ -17,7 +15,6 @@ export interface RuleConfig {
 
 export class RuleEngine {
   private expandedPatterns = new Map<string, RegExp>();
-  private tokenDefinitions = new Map<string, TokenDefinition>();
   private referencedTokens = new Set<string>();
 
   constructor(private config: RuleConfig) {}
@@ -28,7 +25,7 @@ export class RuleEngine {
   buildTokenDefinitions(): TokenDefinition[] {
     const definitions: TokenDefinition[] = [];
     const entries = Object.entries(this.config.tokens);
-    
+
     // まず全てのトークンを処理
     for (const [name, value] of entries) {
       this.processToken(name, value, definitions);
@@ -46,7 +43,7 @@ export class RuleEngine {
     value: TokenValue,
     definitions: TokenDefinition[],
     parentName?: string,
-    priority = 0
+    priority = 0,
   ): void {
     if (value === null) {
       // コンテキスト依存トークン
@@ -61,7 +58,7 @@ export class RuleEngine {
     if (value instanceof RegExp) {
       const pattern = this.expandPattern(value, name);
       const subTokens = this.extractSubTokens(pattern);
-      
+
       definitions.push({
         name: parentName ? `${parentName}_${name}` : name,
         pattern,
@@ -71,16 +68,16 @@ export class RuleEngine {
       });
     } else if (Array.isArray(value)) {
       // 配列の場合は OR パターンとして結合
-      const patterns = value.map(v => {
+      const patterns = value.map((v) => {
         if (v instanceof RegExp) {
           return this.expandPattern(v, name);
         }
         throw new Error(`Invalid pattern in array for token ${name}`);
       });
-      
+
       const combinedPattern = this.combinePatterns(patterns);
       const subTokens = this.extractSubTokens(combinedPattern);
-      
+
       definitions.push({
         name: parentName ? `${parentName}_${name}` : name,
         pattern: combinedPattern,
@@ -88,7 +85,7 @@ export class RuleEngine {
         priority,
         categories: parentName ? [parentName] : undefined,
       });
-    } else if (typeof value === 'object') {
+    } else if (typeof value === "object") {
       // オブジェクトの場合は階層的トークン
       // 親トークンを追加（パターンなし）
       definitions.push({
@@ -110,20 +107,20 @@ export class RuleEngine {
    */
   private expandPattern(pattern: RegExp, currentToken: string): RegExp {
     const cacheKey = `${currentToken}:${pattern.source}`;
-    
+
     if (this.expandedPatterns.has(cacheKey)) {
       return this.expandedPatterns.get(cacheKey)!;
     }
 
     let source = pattern.source;
     const visitedTokens = new Set<string>([currentToken]);
-    
+
     // {tokenName} パターンを再帰的に展開
     source = this.expandTokenReferences(source, visitedTokens);
-    
+
     const expandedPattern = new RegExp(source, pattern.flags);
     this.expandedPatterns.set(cacheKey, expandedPattern);
-    
+
     return expandedPattern;
   }
 
@@ -132,21 +129,21 @@ export class RuleEngine {
    */
   private expandTokenReferences(source: string, visitedTokens: Set<string>): string {
     const tokenRefPattern = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
-    
-    return source.replace(tokenRefPattern, (match, tokenName) => {
+
+    return source.replace(tokenRefPattern, (_match, tokenName) => {
       if (visitedTokens.has(tokenName)) {
-        throw new Error(`Circular reference detected: ${[...visitedTokens, tokenName].join(' -> ')}`);
+        throw new Error(`Circular reference detected: ${[...visitedTokens, tokenName].join(" -> ")}`);
       }
 
       this.referencedTokens.add(tokenName);
       const tokenValue = this.getTokenValue(tokenName);
-      
+
       if (!tokenValue) {
         throw new Error(`Token ${tokenName} not found`);
       }
 
       visitedTokens.add(tokenName);
-      
+
       try {
         const pattern = this.getPatternFromValue(tokenValue);
         // 再帰的に展開
@@ -164,16 +161,16 @@ export class RuleEngine {
     if (value instanceof RegExp) {
       return value;
     }
-    
+
     if (Array.isArray(value)) {
-      const patterns = value.map(v => {
+      const patterns = value.map((v) => {
         if (v instanceof RegExp) return v;
-        throw new Error('Invalid pattern in array');
+        throw new Error("Invalid pattern in array");
       });
       return this.combinePatterns(patterns);
     }
-    
-    if (typeof value === 'object' && value !== null) {
+
+    if (typeof value === "object" && value !== null) {
       // オブジェクトの場合、最初の有効なパターンを使用
       for (const childValue of Object.values(value)) {
         if (childValue instanceof RegExp || Array.isArray(childValue)) {
@@ -181,8 +178,8 @@ export class RuleEngine {
         }
       }
     }
-    
-    throw new Error('No valid pattern found');
+
+    throw new Error("No valid pattern found");
   }
 
   /**
@@ -193,35 +190,35 @@ export class RuleEngine {
     if (tokenName in this.config.tokens) {
       return this.config.tokens[tokenName];
     }
-    
+
     // 階層的に検索（ipAddress.ipAddressV4 のような形式）
-    const searchInObject = (obj: any, remainingPath: string[]): TokenValue | undefined => {
+    const searchInObject = (obj: Record<string, TokenValue>, remainingPath: string[]): TokenValue | undefined => {
       if (remainingPath.length === 0) {
         return undefined;
       }
-      
+
       const [head, ...tail] = remainingPath;
-      
-      if (obj && typeof obj === 'object' && head in obj) {
+
+      if (obj && typeof obj === "object" && head in obj) {
         if (tail.length === 0) {
           return obj[head];
         }
         return searchInObject(obj[head], tail);
       }
-      
+
       return undefined;
     };
-    
+
     // すべてのトップレベルトークンから検索
-    for (const [key, value] of Object.entries(this.config.tokens)) {
-      if (typeof value === 'object' && value !== null && !(value instanceof RegExp) && !Array.isArray(value)) {
+    for (const [_key, value] of Object.entries(this.config.tokens)) {
+      if (typeof value === "object" && value !== null && !(value instanceof RegExp) && !Array.isArray(value)) {
         const result = searchInObject(value, [tokenName]);
         if (result !== undefined) {
           return result;
         }
       }
     }
-    
+
     return undefined;
   }
 
@@ -229,9 +226,9 @@ export class RuleEngine {
    * 複数のパターンを OR で結合
    */
   private combinePatterns(patterns: RegExp[]): RegExp {
-    const sources = patterns.map(p => `(?:${p.source})`);
-    const flags = [...new Set(patterns.flatMap(p => p.flags.split('')))].join('');
-    return new RegExp(sources.join('|'), flags);
+    const sources = patterns.map((p) => `(?:${p.source})`);
+    const flags = [...new Set(patterns.flatMap((p) => p.flags.split("")))].join("");
+    return new RegExp(sources.join("|"), flags);
   }
 
   /**
@@ -240,47 +237,47 @@ export class RuleEngine {
   private extractSubTokens(pattern: RegExp): Map<string, RegExp> {
     const subTokens = new Map<string, RegExp>();
     const source = pattern.source;
-    
+
     // 名前付きキャプチャグループを抽出（ネストした括弧に対応）
     const namedGroupPattern = /\(\?<([a-zA-Z][a-zA-Z0-9_]*)>/g;
-    
-    let match;
+
+    let match: RegExpExecArray | null;
     while ((match = namedGroupPattern.exec(source)) !== null) {
       const name = match[1];
       const startPos = match.index + match[0].length;
-      
+
       // 対応する閉じ括弧を探す
       let depth = 1;
       let endPos = startPos;
       let inCharClass = false;
-      
+
       while (endPos < source.length && depth > 0) {
         const char = source[endPos];
-        const prevChar = endPos > 0 ? source[endPos - 1] : '';
-        
-        if (char === '[' && prevChar !== '\\') {
+        const prevChar = endPos > 0 ? source[endPos - 1] : "";
+
+        if (char === "[" && prevChar !== "\\") {
           inCharClass = true;
-        } else if (char === ']' && prevChar !== '\\' && inCharClass) {
+        } else if (char === "]" && prevChar !== "\\" && inCharClass) {
           inCharClass = false;
-        } else if (char === '(' && prevChar !== '\\' && !inCharClass) {
+        } else if (char === "(" && prevChar !== "\\" && !inCharClass) {
           depth++;
-        } else if (char === ')' && prevChar !== '\\' && !inCharClass) {
+        } else if (char === ")" && prevChar !== "\\" && !inCharClass) {
           depth--;
         }
-        
+
         endPos++;
       }
-      
+
       if (depth === 0) {
         const groupPattern = source.substring(startPos, endPos - 1);
         try {
           subTokens.set(name, new RegExp(groupPattern));
-        } catch (e) {
+        } catch (_e) {
           console.warn(`Failed to create regex for subtoken ${name}: ${groupPattern}`);
         }
       }
     }
-    
+
     return subTokens;
   }
 
@@ -290,22 +287,22 @@ export class RuleEngine {
   private adjustPriorities(definitions: TokenDefinition[]): TokenDefinition[] {
     const result: TokenDefinition[] = [];
     const deferred: TokenDefinition[] = [];
-    
+
     for (const def of definitions) {
-      if (this.referencedTokens.has(def.name.split('_')[0])) {
+      if (this.referencedTokens.has(def.name.split("_")[0])) {
         // 参照されているトークンは後回し
         deferred.push(def);
       } else {
         result.push(def);
       }
     }
-    
+
     // 優先順位を再設定
     let priority = 0;
     for (const def of [...result, ...deferred]) {
       def.priority = priority++;
     }
-    
+
     return [...result, ...deferred];
   }
 }
