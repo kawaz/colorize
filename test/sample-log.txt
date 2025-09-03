@@ -1,0 +1,14 @@
+2024-01-15T10:30:45.123Z INFO Server started on port 3000
+2024-01-15T10:30:46.456Z DEBUG Connecting to database at 192.168.1.100
+2024-01-15T10:30:47.789Z ERROR Failed to connect: Connection timeout
+[src/server.ts:123] WARNING Configuration file not found
+(app.js:456:10) ERROR Uncaught exception: null is not defined
+src/index.ts:789: INFO Application initialized successfully
+GET /api/users 200
+POST /api/login 401
+true false null undefined
+key=value name:"John Doe" status:active
+192.168.1.1 ::1 fe80::1 2001:db8::1
+[Object ...] Processing items...
+"Hello World" 'Single quotes' "Escape: \n\t\""
+123 456.789 -42 3.14159
