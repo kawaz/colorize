@@ -1,0 +1,113 @@
+import chalk from "chalk";
+import type { IToken } from "chevrotain";
+import type { SimpleParser } from "./parser-simple";
+import type { ResolvedTheme } from "./theme-resolver";
+
+export interface SimpleVisitorOptions {
+  theme: ResolvedTheme;
+  showRelativeTime?: boolean;
+}
+
+export class SimpleVisitor {
+  constructor(
+    private parser: SimpleParser,
+    private options: SimpleVisitorOptions
+  ) {}
+
+  /**
+   * トークンリストを処理して色付け
+   */
+  processTokens(tokens: IToken[]): string {
+    let result = "";
+    
+    for (const token of tokens) {
+      result += this.processToken(token);
+    }
+    
+    return result;
+  }
+
+  /**
+   * 単一トークンを処理
+   */
+  private processToken(token: IToken): string {
+    const tokenType = token.tokenType.name;
+    const value = token.image;
+    
+    // テーマから色を取得
+    const themeValue = this.options.theme.getTheme(tokenType);
+    
+    if (!themeValue) {
+      return value;
+    }
+    
+    // 文字列の場合は簡略記法を展開して適用
+    if (typeof themeValue === "string") {
+      return this.applyShorthandTheme(value, themeValue);
+    }
+    
+    // オブジェクトの場合はスタイルを適用
+    if (typeof themeValue === "object" && themeValue !== null) {
+      return this.applyStyleObject(value, themeValue);
+    }
+    
+    // 関数の場合は実行
+    if (typeof themeValue === "function") {
+      return themeValue({ value, tokenType });
+    }
+    
+    return value;
+  }
+
+  /**
+   * 簡略記法のテーマを適用
+   */
+  private applyShorthandTheme(value: string, theme: string): string {
+    const parts = theme.split("|");
+    let result = value;
+    
+    for (const part of parts) {
+      const trimmed = part.trim();
+      
+      // 色名
+      if (trimmed in chalk) {
+        result = (chalk as any)[trimmed](result);
+      }
+      // HEX色
+      else if (trimmed.startsWith("#")) {
+        result = chalk.hex(trimmed)(result);
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * スタイルオブジェクトを適用
+   */
+  private applyStyleObject(value: string, style: any): string {
+    let result = value;
+    
+    if (style.color) {
+      if (style.color in chalk) {
+        result = (chalk as any)[style.color](result);
+      } else if (style.color.startsWith("#")) {
+        result = chalk.hex(style.color)(result);
+      }
+    }
+    
+    if (style.fontWeight === "bold") {
+      result = chalk.bold(result);
+    }
+    
+    if (style.fontStyle === "italic") {
+      result = chalk.italic(result);
+    }
+    
+    if (style.textDecoration === "underline") {
+      result = chalk.underline(result);
+    }
+    
+    return result;
+  }
+}

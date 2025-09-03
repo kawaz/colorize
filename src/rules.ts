@@ -32,12 +32,13 @@ const tokens = {
     ],
 
     filename: null, // サブトークンとして定義される予定のキーを明示する場合は null とする。これはなくても自動で定義もされるが明示しておくとわかりやすい。
+    lineNumber: null,
+    lineColumn: null,
+    // sourceInfoは後で名前付きキャプチャグループではなく、位置ベースのパターンとして実装する
     sourceInfo: [
-        /\[(?<filename>[^\]:]+):(?<lineNumber>\d+)(:(?<lineColumn>\d+))?\]/,
-        // stack trace style
-        /\((?<filename>[^):]+):(?<lineNumber>\d+)(:(?<lineColumn>\d+))?\)/,
-        // grep style
-        /(?<filename>[^\s:]+:(?<lineNumber>\d+)(:(?<lineColumn>\d+))?)/
+        /\[[^\]:]+:\d+(?::\d+)?\]/,  // [src/file.ts:123] or [src/file.ts:123:45]
+        /\([^):]+:\d+(?::\d+)?\)/,   // (app.js:456) or (app.js:456:10)
+        /[^\s:]+:\d+(?::\d+)?:/       // src/index.ts:789: or src/index.ts:789:12:
     ],
 
     // ipAddress: /{ipAddressV4}|{ipAddressV6}/, のような埋め込み方式の他に階層的に書くことも出来る。
